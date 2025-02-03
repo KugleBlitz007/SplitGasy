@@ -1,0 +1,59 @@
+classDiagram
+    class Login
+    class Admin {
+        no interface
+    }
+    class UserMaster {
+        Edit group()
+        Add/Remove/Edit permissions()
+    }
+    class UserNormal {
+        Add/view permissions()
+    }
+    class Group {
+        list of group
+        list of friends
+    }
+    class Chat {
+        single/group
+        nehefa reo
+    }
+    class Bills {
+        resume des bills
+    }
+    class Actions {
+        +Add()
+        +Remove()
+        +Modify()
+    }
+    class Add {
+        scan bill()
+        recognize items()
+        allocate items()
+        calculate total()
+        view summary of expenses()
+    }
+    class Remove {
+        show that it was paid()
+        after all paid removed()
+        manual delete()
+    }
+    class Modify {
+        -//-
+    }
+    class PhotoAppLibrary {
+        
+    }
+    
+    Login --> Admin
+    Login --> UserMaster
+    Login --> UserNormal
+    UserNormal -->  Group
+    UserMaster --> Group 
+    Group --> Chat
+    Group --> Bills
+    Bills --> Actions
+    Actions --> Add
+    Actions --> Remove
+    Actions --> Modify
+    Add --> PhotoAppLibrary : scan bill()
