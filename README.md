@@ -1,5 +1,5 @@
 # SplitGasy
-# Will be done with Android Studio
+# Will be done with Flutter
 
 Johann Rajosefa 300300054
 Dera Ramiliarijaona 
