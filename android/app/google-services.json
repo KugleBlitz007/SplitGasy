@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "194488049154",
+    "project_id": "splitgasy",
+    "storage_bucket": "splitgasy.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:194488049154:android:9ff1c0007efd07c27dd11b",
+        "android_client_info": {
+          "package_name": "com.example.splitgasy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2XIodHWOVzHeM9roNRfeG4xdOae_M7oE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:194488049154:android:1a9dc0887c87182c7dd11b",
+        "android_client_info": {
+          "package_name": "com.splitgasy.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2XIodHWOVzHeM9roNRfeG4xdOae_M7oE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
