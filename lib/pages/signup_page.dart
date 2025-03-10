@@ -3,29 +3,38 @@ import 'package:splitgasy/components/custom_button.dart';
 import 'package:splitgasy/components/custom_text_field.dart';
 import 'package:splitgasy/services/auth_service.dart';
 
-class LoginPage extends StatefulWidget {
+class SignupPage extends StatefulWidget {
   final Function()? onTap;
-  const LoginPage({super.key, required this.onTap});
+  const SignupPage({super.key, required this.onTap});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignupPage> createState() => _SignupPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignupPageState extends State<SignupPage> {
   // Fields controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   // Auth service instance
   final AuthService _authService = AuthService();
 
-  // Sign in function
-  void signIn() async {
+  // Sign up function
+  void signUp() async {
     try {
-      await _authService.signInWithEmailPassword(
+      // check if password and confirm matches
+      if (passwordController.text == confirmPasswordController.text) {
+        await _authService.registerWithEmailPassword(
         emailController.text,
         passwordController.text);
-      print('Success');
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Passwords don\'t match'))
+        );
+      }
+      
     } catch (e) {
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
@@ -49,10 +58,10 @@ class _LoginPageState extends State<LoginPage> {
           
                 // Welcome message
                 Text(
-                  'Welcome to SplitGasy!',
+                  'Sign Up',
                   style: TextStyle(
                     color: Colors.grey[700],
-                    fontSize: 25,
+                    fontSize: 30,
                     fontWeight: FontWeight.w800
                   ),
                 ),
@@ -68,85 +77,41 @@ class _LoginPageState extends State<LoginPage> {
           
                 const SizedBox(height: 20),
           
-                // password value
+                // password field
                 CustomTextField(
                   controller: passwordController,
                   hintText: 'Password',
                   obscureText: true,
                 ),
-          
+
                 const SizedBox(height: 20),
-            
-                // forgot password
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Forgot password?',
-                        style: TextStyle(
-                          color: Colors.grey[800],
-                          decoration: TextDecoration.underline),  
-                      ),
-                    ],
-                  ),
+
+                // configm password field
+                CustomTextField(
+                  controller: confirmPasswordController,
+                  hintText: 'Confirm password',
+                  obscureText: true,
                 ),
           
                 const SizedBox(height: 20),
           
-                // sign in button
+                // sign up button
                 CustomButton(
-                  onTap: signIn,
+                  onTap: signUp,
+                  text: 'Sign Up',
                 ),
           
                 const SizedBox(height: 50),
-          
-                // or continue with
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                  
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          'or continue with',
-                          style: TextStyle(
-                            color: Colors.grey[800],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                  
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // google button
-          
-                const SizedBox(height: 250),
           
                 // Register
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Don't have an account yet? "),
+                    Text("Already have an account? "),
                     GestureDetector(
                       onTap: widget.onTap,
                       child: Text(
-                        "Register here",
+                        "Sign in here",
                         style: TextStyle(
                           color: Colors.blueGrey,
                           fontWeight: FontWeight.bold,
