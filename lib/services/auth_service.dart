@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -19,12 +20,33 @@ class AuthService {
   }
 
   // Email & Password Registration
-  Future<UserCredential?> registerWithEmailPassword(String email, String password) async {
+  Future<UserCredential?> registerWithEmailPassword(
+    String email,
+    String password,
+    String name,
+    ) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(
+
+      await FirebaseAuth.instance.signOut();
+
+      // Create user account with email and password
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Update Firebase Auth display name
+      await userCredential.user!.updateDisplayName(name);
+      await userCredential.user!.reload();
+
+      // Store user in Firestore
+      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+        'name': name,
+        'email': email,
+        'joined': FieldValue.serverTimestamp(),
+      });
+
+      return userCredential;
     } catch (e) {
       print('Error registering with email/password: $e');
       rethrow;
