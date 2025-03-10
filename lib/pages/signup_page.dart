@@ -1,7 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:splitgasy/components/custom_button.dart';
 import 'package:splitgasy/components/custom_text_field.dart';
 import 'package:splitgasy/services/auth_service.dart';
+
+import 'home_page.dart';
 
 class SignupPage extends StatefulWidget {
   final Function()? onTap;
@@ -16,29 +19,77 @@ class _SignupPageState extends State<SignupPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final nameController = TextEditingController();
+  
+  // Loading state variable
+  bool isLoading = false;
 
   // Auth service instance
   final AuthService _authService = AuthService();
 
   // Sign up function
   void signUp() async {
+    // Set to loading
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      // check if password and confirm matches
-      if (passwordController.text == confirmPasswordController.text) {
-        await _authService.registerWithEmailPassword(
-        emailController.text,
-        passwordController.text);
-      } else {
+      // Check if password and confirm password match
+      if (passwordController.text != confirmPasswordController.text) {
+        // Stop loading
+        if (context.mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+
         // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Passwords don\'t match'))
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Passwords don\'t match')),
+          );
+        }
+
+        return;
+      }
+
+      // Register the user
+      await _authService.registerWithEmailPassword(
+        emailController.text,
+        passwordController.text,
+        nameController.text,
+      );
+
+      // Ensure the user's display name is updated
+      await FirebaseAuth.instance.currentUser?.reload();
+
+      // Stop loading
+      if (context.mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+
+      // Navigate to HomePage
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       }
-      
+
     } catch (e) {
+      // Stop loading
+      if (context.mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error signing in: wrong email and/or password'))
+        SnackBar(content: Text('Error signing up')),
       );
     }
   }
@@ -68,6 +119,15 @@ class _SignupPageState extends State<SignupPage> {
           
                 const SizedBox(height: 50),
           
+                // name field
+                CustomTextField(
+                  controller: nameController,
+                  hintText: 'Name',
+                  obscureText: false,
+                ),
+
+                const SizedBox(height: 20),
+                
                 // email field
                 CustomTextField(
                   controller: emailController,
@@ -96,10 +156,12 @@ class _SignupPageState extends State<SignupPage> {
                 const SizedBox(height: 20),
           
                 // sign up button
-                CustomButton(
-                  onTap: signUp,
-                  text: 'Sign Up',
-                ),
+                isLoading
+                    ? const CircularProgressIndicator() // Show loading circle
+                    : CustomButton(
+                        onTap: signUp,
+                        text: 'Sign Up',
+                      ),
           
                 const SizedBox(height: 50),
           

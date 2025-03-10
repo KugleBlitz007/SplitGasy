@@ -1,7 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:splitgasy/components/custom_button.dart';
 import 'package:splitgasy/components/custom_text_field.dart';
 import 'package:splitgasy/services/auth_service.dart';
+
+import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -16,22 +20,59 @@ class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  // Loading state variable
+  bool isLoading = false;
+
   // Auth service instance
   final AuthService _authService = AuthService();
 
   // Sign in function
   void signIn() async {
+    // Set to loading
+    setState(() {
+      isLoading = true;
+    });
+    
+    // Try signing the user in
     try {
       await _authService.signInWithEmailPassword(
         emailController.text,
         passwordController.text);
-      print('Success');
+    
+      // Ensure all data is loaded
+      await FirebaseAuth.instance.currentUser?.reload();
+
+      // Stop loading
+      if (context.mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+
+      // Navigate to HomePage
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
+
     } catch (e) {
+      // Stop loading
+      if (context.mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+
       // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error signing in: wrong email and/or password'))
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error signing in: wrong email and/or password'))
+        );
+      }
     }
+
   }
 
   @override
@@ -94,10 +135,13 @@ class _LoginPageState extends State<LoginPage> {
           
                 const SizedBox(height: 20),
           
-                // sign in button
-                CustomButton(
-                  onTap: signIn,
-                ),
+                // Sign in button
+                isLoading
+                    ? const CircularProgressIndicator() // Show loading circle
+                    : CustomButton(
+                        onTap: signIn,
+                        text: 'Sign In',
+                      ),
           
                 const SizedBox(height: 50),
           
