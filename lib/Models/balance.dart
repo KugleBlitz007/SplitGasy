@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'user.dart';
+import 'app_user.dart';
 
 class Balance {
-  final User user;
+  final AppUser user;
   double amount;
 
   Balance({
@@ -14,7 +14,7 @@ class Balance {
   factory Balance.fromSnapshot(DocumentSnapshot snapshot) {
     final data = snapshot.data() as Map<String, dynamic>;
     return Balance(
-      user: User(
+      user: AppUser(
         id: data['user']['id'] as String,
         profile: data['user']['profile'] as String,
         name: data['user']['name'] as String,

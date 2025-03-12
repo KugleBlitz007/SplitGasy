@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'user.dart';
+import 'app_user.dart';
 
 class Group {
   final String id;
   final String profile; // e.g., a URL or asset path for the group image.
   String name;
-  List<User> members;
+  List<AppUser> members;
 
   Group({
     required this.id,
@@ -20,8 +20,8 @@ class Group {
 
     // Assuming members are stored as a list of maps.
     final membersData = data['members'] as List<dynamic>? ?? [];
-    List<User> members = membersData.map((memberData) {
-      return User(
+    List<AppUser> members = membersData.map((memberData) {
+      return AppUser(
         id: memberData['id'] as String,
         profile: memberData['profile'] as String,
         name: memberData['name'] as String,
@@ -48,12 +48,12 @@ class Group {
     };
   }
 
-  void addMember(User user) {
+  void addMember(AppUser user) {
     members.add(user);
     // Optionally update Firestore.
   }
 
-  void removeMember(User user) {
+  void removeMember(AppUser user) {
     members.removeWhere((u) => u.id == user.id);
     // Optionally update Firestore.
   }

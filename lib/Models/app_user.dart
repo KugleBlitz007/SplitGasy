@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class User {
+class AppUser {
   final String id;
   final String profile;
   final String name;
   final String email;
 
-  User({
+  AppUser({
     required this.id,
     required this.profile,
     required this.name,
@@ -14,9 +14,9 @@ class User {
   });
 
   /// Creates a User from a Firestore DocumentSnapshot.
-  factory User.fromSnapshot(DocumentSnapshot snapshot) {
+  factory AppUser.fromSnapshot(DocumentSnapshot snapshot) {
     final data = snapshot.data() as Map<String, dynamic>;
-    return User(
+    return AppUser(
       id: snapshot.id,
       profile: data['profile'] as String,
       name: data['name'] as String,

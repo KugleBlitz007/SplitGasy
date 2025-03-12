@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'user.dart';
+import 'app_user.dart';
 
 class Expense {
   final String id;
   final String description;
   final double amount;
-  final User paidBy;
+  final AppUser paidBy;
   final Map<String, double> shares;
   final DateTime date;
 
@@ -25,7 +25,7 @@ class Expense {
       id: snapshot.id,
       description: data['description'] as String,
       amount: (data['amount'] as num).toDouble(),
-      paidBy: User(
+      paidBy: AppUser(
         id: data['paidBy']['id'] as String,
         profile: data['paidBy']['profile'] as String,
         name: data['paidBy']['name'] as String,
