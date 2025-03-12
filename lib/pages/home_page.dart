@@ -2,11 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:splitgasy/components/custom_button.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:splitgasy/pages/groupe_page.dart';
 import 'login_or_signup_page.dart';
 import 'package:splitgasy/data/sample_data.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -207,8 +208,13 @@ class _HomePageState extends State<HomePage> {
                             //   ),
                             // ),
                             onTap: () {
-                              // Handle tap event, e.g., navigate to another page or show details
-                            },
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => GroupPage(groupName: expenseGroup.name),
+                                    ),
+                                  );
+                                },
                           ),
                         );
                       },
