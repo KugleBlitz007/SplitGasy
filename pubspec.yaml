@@ -40,6 +40,7 @@ dependencies:
   google_sign_in: ^6.3.0
   cloud_firestore: ^5.6.5
   google_fonts: ^6.2.1
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +52,16 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "lib/assets/icon/play_store_512.png"
+  adaptive_icon_background: "#ffffff" # (Optional, for Android adaptive icons)
+  adaptive_icon_foreground: "lib/assets/icon/play_store_512.png" # (Optional)
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -94,3 +105,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
