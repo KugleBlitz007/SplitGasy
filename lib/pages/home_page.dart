@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
           Container(
             padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
             decoration: const BoxDecoration(
-              color: Color(0xFF333533), // Dark green color
+              color: Color(0xFF043E50), // Dark green color
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
