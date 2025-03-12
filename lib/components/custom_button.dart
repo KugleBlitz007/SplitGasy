@@ -31,7 +31,7 @@ class CustomButton extends StatelessWidget {
           child: Ink(
             padding: EdgeInsets.all(25),
             decoration: BoxDecoration(
-              color: Colors.black,
+              color: Color(0xFF333533),
               borderRadius: BorderRadius.circular(8)
             ),
             child: Center(
