@@ -66,7 +66,7 @@ class GroupPage extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          // Top part (same style as HomePage but with group info)
+          // Top part 
           Container(
             padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
             decoration: const BoxDecoration(
@@ -77,8 +77,18 @@ class GroupPage extends StatelessWidget {
               children: [
                 // Greeting and Notification Icon row
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                 children: [
+                    // Back IconButton
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HomePage()),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 10),
                     // Group info
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,17 +109,7 @@ class GroupPage extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ),
-                    // Back icon
-                    IconButton(
-                      icon: const Icon(Icons.logout, color: Colors.white),
-                          onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const HomePage()),
-                          );
-                        },
-                    ),
+                    )
                   ],
                 ),
 
