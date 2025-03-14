@@ -109,7 +109,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                         onPressed: () => Navigator.pop(context),
                       ),
                       Column(
@@ -130,18 +130,9 @@ class _AddGroupPageState extends State<AddGroupPage> {
                     ],
                   ),
                   const SizedBox(height: 10),
-
-                  // Smaller text
-                  Text(
-                    "Welcome to SplitGasy",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
-                  ),
                   // Larger title
                   Text(
-                    "Create Group",
+                    "Create a group",
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: 22,

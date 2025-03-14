@@ -48,12 +48,12 @@ class Group {
     };
   }
 
-  void addMember(AppUser user) {
+  void removeGroup(AppUser user) {
     members.add(user);
     // Optionally update Firestore.
   }
 
-  void removeMember(AppUser user) {
+  void modifyGroup(AppUser user) {
     members.removeWhere((u) => u.id == user.id);
     // Optionally update Firestore.
   }

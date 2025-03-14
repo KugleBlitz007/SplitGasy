@@ -119,7 +119,7 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           "\$120.03", // You owe amount
                           style: GoogleFonts.poppins(
-                            color: const Color.fromARGB(255, 255, 194, 194),
+                            color: const Color(0xFFFFC2C2),
                             fontSize: 25,
                             fontWeight: FontWeight.bold,
                           ),
@@ -128,7 +128,7 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           "\$85.26", // You are owed amount
                           style: GoogleFonts.poppins(
-                            color: const Color.fromARGB(255, 193, 255, 225),
+                            color: const Color(0xFFC1FFE1),
                             fontSize: 25,
                             fontWeight: FontWeight.bold,
                           ),
@@ -180,8 +180,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   // const SizedBox(height: 10),
-
-                  
                   // Use of StreamBuilder to load groups from Firestore
                   // "Your Groups" heading
 
@@ -206,7 +204,6 @@ class _HomePageState extends State<HomePage> {
                             final doc = docs[index];
                             final data = doc.data() as Map<String, dynamic>;
 
-                            // Get the group name and members from the document
                             final groupName = data['name'] as String? ?? 'Unnamed Group';
                             final membersString = data['members'] as String? ?? '';
 
@@ -217,38 +214,76 @@ class _HomePageState extends State<HomePage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
-                                ),
-                                title: Text(
-                                  groupName,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  membersString, // e.g., "David, Nael, Mbola"
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                onTap: () {
-                                  // Navigate to GroupPage with the groupName
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => GroupPage(groupName: groupName),
-                                    ),
+                              child: GestureDetector(
+                                onLongPress: () {
+                                  // Show a dialog with edit and delete options
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text("Select Action", style: GoogleFonts.poppins()),
+                                        content: Text("Would you like to edit or delete this group?", style: GoogleFonts.poppins()),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              // TODO: Implement edit functionality.
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text("Edit", style: GoogleFonts.poppins(color: Color(0xFF043E50))),
+                                          ),
+                                          TextButton(
+                                            onPressed: () async {
+                                              // Delete the group from Firestore.
+                                              await FirebaseFirestore.instance
+                                                  .collection('groups')
+                                                  .doc(doc.id)
+                                                  .delete();
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text("Delete", style: GoogleFonts.poppins(color: Colors.red)),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text("Cancel", style: GoogleFonts.poppins(color: Color(0xFF043E50))),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   );
                                 },
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  title: Text(
+                                    groupName,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    membersString, // e.g., "David, Nael, Mbola"
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    // Navigate to GroupPage with the groupName.
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => GroupPage(groupName: groupName),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             );
                           },
                         );
+
                       },
                     ),
                   ),
