@@ -1,9 +1,14 @@
+import 'dart:ui';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:splitgasy/pages/groupe_page.dart';
+import 'package:splitgasy/pages/group_page.dart';
 import 'login_or_signup_page.dart';
 import 'package:splitgasy/data/sample_data.dart';
+import 'package:splitgasy/pages/add_group.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -142,7 +147,12 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     _buildActionButton("New Bill", Icons.receipt),
                     _buildActionButton("Settle Up", Icons.monetization_on),
-                    _buildActionButton("New Group", Icons.add),
+                    _buildActionButton("New Group", Icons.add, onTap: () {
+                     Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AddGroupPage()),
+                      );
+                    }),
                     _buildActionButton("Request", Icons.request_page),
                     
                   ],
@@ -170,51 +180,74 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   // const SizedBox(height: 10),
+
+                  
+                  // Use of StreamBuilder to load groups from Firestore
+                  // "Your Groups" heading
+
+                  const SizedBox(height: 10),
+
+                  // Use a StreamBuilder to load groups from Firestore
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: expenseGroups.length,
-                      itemBuilder: (context, index) {
-                        final expenseGroup = expenseGroups[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 15),
-                          elevation: 0,
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            title: Text(
-                              expenseGroup.name,  // Display name
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance.collection('groups').snapshots(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        final docs = snapshot.data!.docs;
+                        if (docs.isEmpty) {
+                          return const Center(child: Text('No groups found.'));
+                        }
+
+                        return ListView.builder(
+                          itemCount: docs.length,
+                          itemBuilder: (context, index) {
+                            final doc = docs[index];
+                            final data = doc.data() as Map<String, dynamic>;
+
+                            // Get the group name and members from the document
+                            final groupName = data['name'] as String? ?? 'Unnamed Group';
+                            final membersString = data['members'] as String? ?? '';
+
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 15),
+                              elevation: 0,
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                            ),
-                            subtitle: Text(
-                              expenseGroup.members.map((member) => member.name).join(', '),  // Join member names with commas
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            // trailing: Text(
-                            //   "\$${expenseGroup.amount}",  // Replace with the amount or total of the group
-                            //   style: GoogleFonts.poppins(
-                            //     fontSize: 16,
-                            //     color: Colors.greenAccent,
-                            //     fontWeight: FontWeight.bold,
-                            //   ),
-                            // ),
-                            onTap: () {
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                title: Text(
+                                  groupName,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  membersString, // e.g., "David, Nael, Mbola"
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                onTap: () {
+                                  // Navigate to GroupPage with the groupName
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => GroupPage(groupName: expenseGroup.name),
+                                      builder: (context) => GroupPage(groupName: groupName),
                                     ),
                                   );
                                 },
-                          ),
+                              ),
+                            );
+                          },
                         );
                       },
                     ),
@@ -229,8 +262,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildActionButton(String title, IconData icon) {
-    return Column(
+/// Builds an action button widget that displays an icon and a title.
+  Widget _buildActionButton(String title, IconData icon, {VoidCallback? onTap}) {
+    // Wrap the button in a GestureDetector to handle taps.
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
       children: [
         CircleAvatar(
           radius: 25,
@@ -246,6 +283,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ],
+      )
     );
   }
 }
