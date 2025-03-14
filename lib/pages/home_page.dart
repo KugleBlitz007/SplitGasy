@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -222,15 +221,59 @@ class _HomePageState extends State<HomePage> {
                                     builder: (context) {
                                       return AlertDialog(
                                         title: Text("Select Action", style: GoogleFonts.poppins()),
-                                        content: Text("Would you like to edit or delete this group?", style: GoogleFonts.poppins()),
+                                        content: Text("Would you like to rename or delete this group?", style: GoogleFonts.poppins()),
                                         actions: [
+                                          //rename group action
                                           TextButton(
-                                            onPressed: () {
-                                              // TODO: Implement edit functionality.
+                                            onPressed: () { 
+                                              // Close the first dialog.
                                               Navigator.pop(context);
+                                              // Then show a second dialog to rename.
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) {
+                                                  // Create a controller pre-filled with the current group name.
+                                                  final TextEditingController _renameController = TextEditingController(text: groupName);
+                                                  return AlertDialog(
+                                                    title: Text("Rename Group", style: GoogleFonts.poppins()),
+                                                    content: TextField(
+                                                      controller: _renameController,
+                                                      style: GoogleFonts.poppins(),
+                                                      decoration: InputDecoration(
+                                                        labelText: "New Group Name",
+                                                        labelStyle: GoogleFonts.poppins(),
+                                                      ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () async {
+                                                          final newName = _renameController.text.trim();
+                                                          if (newName.isNotEmpty) {
+                                                            await FirebaseFirestore.instance
+                                                                .collection('groups')
+                                                                .doc(doc.id)
+                                                                .update({'name': newName});
+                                                          }
+                                                          Navigator.pop(context); // Close rename dialog.
+                                                        },
+                                                        child: Text("Rename", style: GoogleFonts.poppins(color: const Color(0xFF043E50))),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(context); // Cancel rename.
+                                                        },
+                                                        child: Text("Cancel", style: GoogleFonts.poppins(color: const Color(0xFF043E50))),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
                                             },
-                                            child: Text("Edit", style: GoogleFonts.poppins(color: Color(0xFF043E50))),
+                                          //Rename   
+                                          child: Text("Rename", style: GoogleFonts.poppins(color: Color(0xFF043E50))),
                                           ),
+
+                                          //delete group action
                                           TextButton(
                                             onPressed: () async {
                                               // Delete the group from Firestore.
@@ -242,6 +285,8 @@ class _HomePageState extends State<HomePage> {
                                             },
                                             child: Text("Delete", style: GoogleFonts.poppins(color: Colors.red)),
                                           ),
+
+                                          //cancel 
                                           TextButton(
                                             onPressed: () {
                                               Navigator.pop(context);
