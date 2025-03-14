@@ -99,7 +99,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
             Container(
               padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
               decoration: const BoxDecoration(
-                color: Color(0xFF002B5B),
+                color: Color.fromARGB(255, 1, 87, 77),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +190,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF333533),
+                            color: Color.fromARGB(255, 1, 87, 77),
                           ),
                         ),
                       ),
@@ -211,7 +211,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
                           final friend = entry.value;
                           return CheckboxListTile(
                             value: friend['selected'],
-                            activeColor: const Color(0xFF2D6A4F), // Green check color
+                            activeColor: const Color.fromARGB(255, 1, 87, 77), // Green check color
                             onChanged: (bool? value) {
                               _toggleFriendSelection(index);
                             },
@@ -239,7 +239,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
                         child: ElevatedButton(
                           onPressed: _saveGroup,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2D6A4F),
+                            backgroundColor: const Color.fromARGB(255, 1, 87, 77),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
