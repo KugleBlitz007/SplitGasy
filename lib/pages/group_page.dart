@@ -171,20 +171,21 @@ class GroupPage extends StatelessWidget {
 
                 // Action Buttons row (copied from HomePage)
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildActionButton("New Bill", Icons.receipt, onTap: () {
-                      // TODO: Add "New Bill" functionality for group page
+                    _buildActionButton("Chat", Icons.chat, onTap: () {
+                      // TODO: Add "Request" functionality for group page
                     }),
                     _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
                       // TODO: Add "Settle Up" functionality for group page
                     }),
-                    _buildActionButton("New Friend", Icons.add, onTap: () {
+                    _buildActionButton("Add ", Icons.group_add, onTap: () {
                       // TODO: Add "New Group" functionality for group page
                     }),
-                    _buildActionButton("Chat", Icons.chat, onTap: () {
-                      // TODO: Add "Request" functionality for group page
+                    _buildActionButton("Remove", Icons.group_remove, onTap: () {
+                      // TODO: Add "New Bill" functionality for group page
                     }),
+
                   ],
                 ),
               ],
