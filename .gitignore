@@ -50,4 +50,5 @@ app.*.map.json
 **/GeneratedPluginRegistrant.swift
 **/generated_plugins.cmake
 
+# Environment variables
 .env
