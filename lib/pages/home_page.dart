@@ -7,6 +7,7 @@ import 'package:splitgasy/pages/group_page.dart';
 import 'login_or_signup_page.dart';
 import 'package:splitgasy/data/sample_data.dart';
 import 'package:splitgasy/pages/add_group.dart';
+import 'search_friends.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -50,7 +51,12 @@ class _HomePageState extends State<HomePage> {
                           ListTile(
                             title: Text("Search Friends"),
                             leading: const Icon(Icons.search),
-                            onTap: (){},
+                            onTap: (){
+                               Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SearchPage()),
+                      );
+                            },
                           ),
                       ListTile(
                         title: const Text("Logout"),
