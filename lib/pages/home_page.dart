@@ -18,6 +18,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final user = FirebaseAuth.instance.currentUser!;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // sign out function
   void signOut(BuildContext context) async {
@@ -37,6 +38,32 @@ class _HomePageState extends State<HomePage> {
     final expenseGroups = getSampleGroups();
     
     return Scaffold(
+    key: _scaffoldKey,
+
+    endDrawer: Drawer(
+                      child: ListView(
+                        children: [
+                          ListTile(
+                            title: const Text("Placeholder"),
+                            onTap: (){},
+                          ),
+                          ListTile(
+                            title: Text("Search Friends"),
+                            leading: const Icon(Icons.search),
+                            onTap: (){},
+                          ),
+                      ListTile(
+                        title: const Text("Logout"),
+                        leading: const Icon(Icons.logout),
+                        onTap: () {
+                          Navigator.pop(context); 
+                          signOut(context); 
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
       body: Column(
         children: [
           // Top part
@@ -73,10 +100,15 @@ class _HomePageState extends State<HomePage> {
                         // const SizedBox(height: 3),
                       ],
                     ),
+                    
                     IconButton(
-                      icon: const Icon(Icons.logout, color: Colors.white),
-                      onPressed: () => signOut(context),
+                      icon: const Icon(Icons.menu, color: Colors.white),
+                      //onPressed: () => signOut(context),
+                      onPressed:() { 
+                      _scaffoldKey.currentState?.openEndDrawer();
+                      },
                     ),
+                    
                   ],
                 ),
           
