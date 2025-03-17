@@ -179,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                 
                 // google button
           
-                const SizedBox(height: 250),
+                const SizedBox(height: 150),
           
                 // Register
                 Row(
