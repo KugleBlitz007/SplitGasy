@@ -22,22 +22,27 @@ class GroupPage extends StatelessWidget {
   Widget _buildActionButton(String title, IconData icon, {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: Colors.white.withOpacity(0.15),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 12,
+      child: SizedBox(
+        width: 80, // Fixed width for each button
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Minimize the column's height
+          children: [
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.white.withOpacity(0.15),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
-          ),
-        ],
+            const SizedBox(height: 5),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center, // Center the text
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -257,10 +262,8 @@ class GroupPage extends StatelessWidget {
                             ),
                           );
                         }),
-                        _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
-                          // TODO: Add "Settle Up" functionality for group page
-                        }),
-                        _buildActionButton("Add", Icons.group_add, onTap: () async {
+
+                        _buildActionButton("Edit Friends", Icons.group_add, onTap: () async {
                           // Fetch current group members
                           final groupDoc = await FirebaseFirestore.instance
                               .collection('groups')
@@ -290,9 +293,11 @@ class GroupPage extends StatelessWidget {
                             }
                           }
                         }),
-                        _buildActionButton("Remove", Icons.group_remove, onTap: () {
-                          // TODO: Add "Remove" functionality for group page
+                        
+                        _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
+                          // TODO: Add "Settle Up" functionality for group page
                         }),
+                        
                       ],
                     ),
                   ],
