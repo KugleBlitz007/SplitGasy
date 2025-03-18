@@ -222,7 +222,14 @@ class _HomePageState extends State<HomePage> {
                   // Use a StreamBuilder to load groups from Firestore
                   Expanded(
                     child: StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance.collection('groups').snapshots(),
+                      stream: FirebaseFirestore.instance
+                          .collection('groups')
+                          .where('members', arrayContains: {
+                            'id': user.uid,
+                            'name': user.displayName ?? 'User',
+                            'email': user.email ?? '',
+                          })
+                          .snapshots(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
                           return const Center(child: CircularProgressIndicator());

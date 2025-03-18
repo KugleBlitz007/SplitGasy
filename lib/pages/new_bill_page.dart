@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:splitgasy/components/custom_text_field.dart'; // Import your custom text field
+import 'package:splitgasy/components/custom_text_field.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:splitgasy/Models/bill.dart';
 
 class NewBillPage extends StatefulWidget {
-  const NewBillPage({super.key});
+  final String groupId;
+  final List<Map<String, dynamic>> groupMembers;
+
+  const NewBillPage({
+    super.key,
+    required this.groupId,
+    required this.groupMembers,
+  });
 
   @override
   _NewBillPageState createState() => _NewBillPageState();
@@ -13,28 +23,16 @@ class _NewBillPageState extends State<NewBillPage> {
   final _billNameController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String? _selectedPayer; // To store who paid the bill
-  String? _selectedSplitMethod; // To store selected split method
+  String? _selectedPayer;
+  String? _selectedSplitMethod;
+  bool _isSubmitting = false;
 
-  // Sample list of group members (replace with actual data from your app)
-  final List<String> _groupMembers = [
-    'Matitika',
-    'Dera',
-    'Johann',
-    'Syd',
-  ];
-
-  // Sample list of split methods (replace with actual data from your app)
+  // Split methods
   final List<String> _splitMethods = [
     'Equal',
     'Proportional',
     'Custom',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -44,22 +42,61 @@ class _NewBillPageState extends State<NewBillPage> {
     super.dispose();
   }
 
-  void _submitBill() {
-    if (_formKey.currentState!.validate()) {
-      // Handle bill submission (e.g., save to Firestore or state)
-      final billName = _billNameController.text;
-      final amount = double.parse(_amountController.text);
-      final description = _descriptionController.text;
-      final paidBy = _selectedPayer;
+  Future<void> _submitBill() async {
+    if (_formKey.currentState!.validate() && _selectedPayer != null && _selectedSplitMethod != null) {
+      setState(() {
+        _isSubmitting = true;
+      });
 
-      // For now, just print the bill details
-      print('Bill Name: $billName');
-      print('Amount: $amount');
-      print('Description: $description');
-      print('Paid By: $paidBy');
+      try {
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser == null) return;
 
-      // Optionally, navigate back to the previous page
-      Navigator.pop(context);
+        // Create initial participants list with equal shares
+        final amount = double.parse(_amountController.text);
+        final equalShare = amount / widget.groupMembers.length;
+        final participants = widget.groupMembers.map((member) => {
+          ...member,
+          'share': equalShare,
+          'paid': member['id'] == _selectedPayer,
+        }).toList();
+
+        // Create the bill document
+        final billData = {
+          'name': _billNameController.text,
+          'groupId': widget.groupId,
+          'paidById': _selectedPayer,
+          'amount': amount,
+          'date': Timestamp.now(),
+          'splitMethod': _selectedSplitMethod?.toLowerCase() ?? 'equal',
+          'participants': participants,
+          'createdBy': currentUser.uid,
+          'createdAt': Timestamp.now(),
+        };
+
+        // Add the bill to Firestore
+        await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(widget.groupId)
+            .collection('bills')
+            .add(billData);
+
+        if (mounted) {
+          Navigator.pop(context, true); // Return true to indicate success
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error creating bill: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
+      }
     }
   }
 
@@ -77,12 +114,12 @@ class _NewBillPageState extends State<NewBillPage> {
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF333533), // Darker color for top section
+                  color: Color(0xFF333533),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Bill Name Input (Transparent TextField)
+                    // Bill Name Input
                     Row(
                       children: [
                         Expanded(
@@ -118,7 +155,6 @@ class _NewBillPageState extends State<NewBillPage> {
                         ),
                       ],
                     ),
-                    
 
                     // Who Paid Section
                     const Text(
@@ -158,10 +194,10 @@ class _NewBillPageState extends State<NewBillPage> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        items: _groupMembers.map((member) {
+                        items: widget.groupMembers.map((member) {
                           return DropdownMenuItem(
-                            value: member,
-                            child: Text(member),
+                            value: member['id'] as String,
+                            child: Text(member['name'] as String),
                           );
                         }).toList(),
                         onChanged: (value) {
@@ -173,7 +209,7 @@ class _NewBillPageState extends State<NewBillPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Split Section
+                    // Split Method Section
                     const Text(
                       'Split...',
                       style: TextStyle(
@@ -232,7 +268,7 @@ class _NewBillPageState extends State<NewBillPage> {
               // Rest of the form fields
               Expanded(
                 child: Container(
-                  color: Colors.grey[200],
+                  color: Colors.white,
                   padding: const EdgeInsets.only(top: 20),
                   child: SingleChildScrollView(
                     child: Form(
@@ -241,43 +277,25 @@ class _NewBillPageState extends State<NewBillPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Amount Field
-                          CustomTextField(
-                            controller: _amountController,
-                            hintText: 'Amount',
-                            obscureText: false,
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Description Field
-                          CustomTextField(
-                            controller: _descriptionController,
-                            hintText: 'Description (Optional)',
-                            obscureText: false,
-                          ),
-                          const SizedBox(height: 30),
-
-                          // Submit Button
-                          Center(
-                            child: ElevatedButton(
-                              onPressed: _submitBill,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF333533),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 40, vertical: 15),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(
-                                'Create Bill',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: CustomTextField(
+                              controller: _amountController,
+                              hintText: 'Amount',
+                              obscureText: false,
+                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter an amount';
+                                }
+                                if (double.tryParse(value) == null) {
+                                  return 'Please enter a valid number';
+                                }
+                                return null;
+                              },
                             ),
                           ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -287,6 +305,13 @@ class _NewBillPageState extends State<NewBillPage> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _isSubmitting ? null : _submitBill,
+        backgroundColor: const Color(0xFF043E50),
+        child: _isSubmitting
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Icon(Icons.check, color: Colors.white),
       ),
     );
   }
