@@ -5,10 +5,12 @@ import 'package:splitgasy/components/bill_list_item.dart';
 import 'new_bill_page.dart';
 class GroupPage extends StatelessWidget {
   final String groupName;
+  final String groupId;
 
   const GroupPage({
     super.key,
     required this.groupName,
+    required this.groupId,
   });
 
   Widget _buildActionButton(String title, IconData icon, {VoidCallback? onTap}) {

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:splitgasy/Models/app_user.dart';
 
 class SearchPage extends StatefulWidget {
-  final List<Map<String, dynamic>> existingFriends;
+  final List<AppUser> existingFriends;
 
   const SearchPage({Key? key, required this.existingFriends}) : super(key: key);
 
@@ -12,8 +13,8 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, dynamic>> searchResults = [];
-  List<Map<String, dynamic>> selectedUsers = [];
+  List<AppUser> searchResults = [];
+  List<AppUser> selectedUsers = [];
 
   // 🔹 Search Users from Firestore
   Future<void> searchUsers(String query) async {
@@ -31,23 +32,22 @@ class _SearchPageState extends State<SearchPage> {
         .collection('users')
         .get();
 
-    List<Map<String, dynamic>> filteredUsers = snapshot.docs
-      .where((doc) => doc['name'].toString().toLowerCase().contains(lowerQuery)) // Case-insensitive filtering
-      .map((doc) => {
-            "id": doc.id,
-            "name": doc['name'],
-            "email": doc['email'],
-          })
+    List<AppUser> filteredUsers = snapshot.docs
+      .where((doc) => doc['name'].toString().toLowerCase().contains(lowerQuery))
+      .map((doc) => AppUser(
+            id: doc.id,
+            name: doc['name'],
+            email: doc['email'],
+          ))
       .toList();
 
-  setState(() {
-    searchResults = filteredUsers;
-  });
-}
-
+    setState(() {
+      searchResults = filteredUsers;
+    });
+  }
 
   // 🔹 Toggle User Selection
-  void toggleUserSelection(Map<String, dynamic> user) {
+  void toggleUserSelection(AppUser user) {
     setState(() {
       if (selectedUsers.contains(user)) {
         selectedUsers.remove(user);
@@ -66,7 +66,7 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(
+        iconTheme: const IconThemeData(
           color: Colors.white70, //change your color here
         ),
         title: const Text("Search Users",
@@ -74,7 +74,7 @@ class _SearchPageState extends State<SearchPage> {
                             color: Colors.white70,
                           ),
         ),
-        backgroundColor: Color(0xFF043E50),
+        backgroundColor: const Color(0xFF043E50),
         actions: [
           if (selectedUsers.isNotEmpty)
             IconButton(
@@ -110,9 +110,10 @@ class _SearchPageState extends State<SearchPage> {
                   : ListView.builder(
                       itemCount: searchResults.length,
                       itemBuilder: (context, index) {
-                        var user = searchResults[index];
+                        final user = searchResults[index];
                         return CheckboxListTile(
-                          title: Text(user['name']),
+                          title: Text(user.name),
+                          subtitle: Text(user.email),
                           value: selectedUsers.contains(user),
                           onChanged: (selected) {
                             toggleUserSelection(user);

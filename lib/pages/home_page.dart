@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:splitgasy/components/group_list_item.dart';
 import 'package:splitgasy/pages/group_page.dart';
 import 'login_or_signup_page.dart';
-import 'package:splitgasy/data/sample_data.dart';
 import 'package:splitgasy/pages/add_group.dart';
 import 'search_friends.dart';
 
@@ -36,8 +34,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    
-    final expenseGroups = getSampleGroups();
     
     return Scaffold(
     key: _scaffoldKey,
@@ -243,17 +239,18 @@ class _HomePageState extends State<HomePage> {
                             final data = doc.data() as Map<String, dynamic>;
 
                             final groupName = data['name'] as String? ?? 'Unnamed Group';
-                            final membersString = data['members'] as String? ?? '';
+                            final members = data['members'] as List<dynamic>? ?? [];
+                            final membersString = members
+                                .map((m) => (m as Map<String, dynamic>)['name'] as String)
+                                .join(', ');
 
                             return GroupListItem(
                               groupId: doc.id,
                               groupName: groupName,
                               membersString: membersString,
                             );
-                            
                           },
                         );
-
                       },
                     ),
                   ),

@@ -23,7 +23,6 @@ class Group {
     List<AppUser> members = membersData.map((memberData) {
       return AppUser(
         id: memberData['id'] as String,
-        profile: memberData['profile'] as String,
         name: memberData['name'] as String,
         email: memberData['email'] as String,
       );

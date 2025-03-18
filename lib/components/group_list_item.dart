@@ -129,7 +129,10 @@ class GroupListItem extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => GroupPage(groupName: groupName),
+                builder: (context) => GroupPage(
+                  groupName: groupName,
+                  groupId: groupId,
+                ),
               ),
             );
           },
