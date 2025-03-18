@@ -389,7 +389,8 @@ class _NewBillPageState extends State<NewBillPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _isSubmitting ? null : _submitBill,
-        backgroundColor: const Color(0xFF043E50),
+        elevation: 0,
+        backgroundColor:  Colors.black26,
         child: _isSubmitting
             ? const CircularProgressIndicator(color: Colors.white)
             : const Icon(Icons.check, color: Colors.white),
