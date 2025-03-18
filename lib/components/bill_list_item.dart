@@ -122,7 +122,7 @@ class BillListItem extends StatelessWidget {
                       'You owe: \$${youOwe.toStringAsFixed(2)}',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: const Color.fromARGB(255, 255, 194, 194),
+                        color: const Color.fromARGB(255, 153, 76, 76),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -131,7 +131,7 @@ class BillListItem extends StatelessWidget {
                       'You are owed: \$${youAreOwed.toStringAsFixed(2)}',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: const Color.fromARGB(255, 193, 255, 225),
+                        color: const Color.fromARGB(255, 80, 146, 115),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
