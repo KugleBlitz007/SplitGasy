@@ -5,7 +5,6 @@ import 'home_page.dart';
 import 'package:splitgasy/components/bill_list_item.dart';
 import 'new_bill_page.dart';
 import 'edit_group.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:splitgasy/Models/app_user.dart';
 
 class GroupPage extends StatelessWidget {
@@ -17,6 +16,29 @@ class GroupPage extends StatelessWidget {
     required this.groupName,
     required this.groupId,
   });
+
+  Widget _buildActionButton(String title, IconData icon, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: Colors.white12,
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +62,7 @@ class GroupPage extends StatelessWidget {
         return Scaffold(
           body: Column(
             children: [
-              // Top part (no changes here)
+              // Top part
               Container(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
                 decoration: const BoxDecoration(
@@ -51,73 +73,7 @@ class GroupPage extends StatelessWidget {
                   children: [
                     // Greeting and Notification Icon row
                     Row(
-                     children: [
-                        // Back IconButton
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => const HomePage()),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 10),
-                        // Group info
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Your Group",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                            Text(
-                              groupName,
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('groups')
-          .doc(groupId)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final groupData = snapshot.data!.data() as Map<String, dynamic>;
-        final members = (groupData['members'] as List<dynamic>?)
-            ?.map((m) => m as Map<String, dynamic>)
-            .toList() ?? [];
-
-        return Scaffold(
-          body: Column(
-            children: [
-              // Top part (no changes here)
-              Container(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF333533),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Greeting and Notification Icon row
-                    Row(
-                     children: [
+                      children: [
                         // Back IconButton
                         IconButton(
                           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
@@ -209,52 +165,54 @@ class GroupPage extends StatelessWidget {
 
                     const SizedBox(height: 30),
 
-                // Action Buttons row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildActionButton("Chat", Icons.chat, onTap: () {
-                      // TODO: Add "Request" functionality for group page
-                    }),
-                    _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
-                      // TODO: Add "Settle Up" functionality for group page
-                    }),
-                    _buildActionButton("Add", Icons.group_add, onTap: () async {
-                      // Fetch current group members
-                      final groupDoc = await FirebaseFirestore.instance
-                          .collection('groups')
-                          .doc(groupId)
-                          .get();
-                      
-                      if (groupDoc.exists) {
-                        final membersData = groupDoc.data()?['members'] as List<dynamic>;
-                        final currentMembers = membersData.map((member) => AppUser(
-                          id: member['id'],
-                          name: member['name'],
-                          email: member['email'],
-                        )).toList();
+                    // Action Buttons row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildActionButton("Chat", Icons.chat, onTap: () {
+                          // TODO: Add "Request" functionality for group page
+                        }),
+                        _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
+                          // TODO: Add "Settle Up" functionality for group page
+                        }),
+                        _buildActionButton("Add", Icons.group_add, onTap: () async {
+                          // Fetch current group members
+                          final groupDoc = await FirebaseFirestore.instance
+                              .collection('groups')
+                              .doc(groupId)
+                              .get();
+                          
+                          if (groupDoc.exists) {
+                            final membersData = groupDoc.data()?['members'] as List<dynamic>;
+                            final currentMembers = membersData.map((member) => AppUser(
+                              id: member['id'],
+                              name: member['name'],
+                              email: member['email'],
+                            )).toList();
 
-                        // Navigate to EditGroupPage
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditGroupPage(
-                              groupId: groupId,
-                              groupName: groupName,
-                              currentMembers: currentMembers,
-                            ),
-                          ),
-                        );
-                      }
-                    }),
-                    _buildActionButton("Remove", Icons.group_remove, onTap: () {
-                      // TODO: Add "New Bill" functionality for group page
-                    }),
+                            // Navigate to EditGroupPage
+                            if (context.mounted) {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditGroupPage(
+                                    groupId: groupId,
+                                    groupName: groupName,
+                                    currentMembers: currentMembers,
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        }),
+                        _buildActionButton("Remove", Icons.group_remove, onTap: () {
+                          // TODO: Add "Remove" functionality for group page
+                        }),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
 
               // Bottom part (Bills list)
               Expanded(
@@ -339,29 +297,6 @@ class GroupPage extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildActionButton(String title, IconData icon, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: Colors.white12,
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
