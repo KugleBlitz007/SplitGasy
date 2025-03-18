@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:splitgasy/Models/app_user.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'search_friends.dart';
 
 class AddGroupPage extends StatefulWidget {
@@ -13,10 +14,68 @@ class AddGroupPage extends StatefulWidget {
 
 class _AddGroupPageState extends State<AddGroupPage> {
   final TextEditingController _groupNameController = TextEditingController();
+  final currentUser = FirebaseAuth.instance.currentUser;
 
   // List of friends using AppUser model
   final List<AppUser> friends = [];
   final Set<String> selectedFriendIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFriends();
+  }
+
+  // Load friends from Firestore
+  Future<void> _loadFriends() async {
+    if (currentUser == null) return;
+
+    try {
+      // Add current user first
+      final currentUserDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .get();
+
+      final currentUserData = currentUserDoc.data() as Map<String, dynamic>? ?? {
+        'name': currentUser?.displayName ?? 'User',
+        'email': currentUser?.email ?? '',
+      };
+
+      setState(() {
+        friends.clear();
+        // Add current user first
+        friends.add(AppUser(
+          id: currentUser!.uid,
+          name: currentUserData['name'],
+          email: currentUserData['email'],
+        ));
+      });
+
+      // Then load friends
+      final friendsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .collection('friends')
+          .get();
+
+      setState(() {
+        for (var doc in friendsSnapshot.docs) {
+          friends.add(AppUser(
+            id: doc.data()['id'],
+            name: doc.data()['name'],
+            email: doc.data()['email'] ?? '',
+          ));
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading friends: $e')),
+        );
+      }
+    }
+  }
 
   // Navigate to SearchPage and Get Selected Users
   Future<void> openSearchPage() async {
@@ -76,10 +135,31 @@ class _AddGroupPageState extends State<AddGroupPage> {
     }
 
     try {
+      // Add current user to the members list
+      final currentUserDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser?.uid)
+          .get();
+
+      final currentUserData = currentUserDoc.data() as Map<String, dynamic>? ?? {
+        'name': currentUser?.displayName ?? 'User',
+        'email': currentUser?.email ?? '',
+      };
+
+      final currentUserMember = AppUser(
+        id: currentUser!.uid,
+        name: currentUserData['name'],
+        email: currentUserData['email'],
+      );
+
+      final allMembers = [currentUserMember, ...selectedFriends];
+
       // Add a new document to the 'groups' collection in Firestore
       await FirebaseFirestore.instance.collection('groups').add({
         'name': groupName,
-        'members': selectedFriends.map((f) => f.toMap()..addAll({'id': f.id})).toList(),
+        'members': allMembers.map((f) => f.toMap()..addAll({'id': f.id})).toList(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'createdBy': currentUser!.uid,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -198,7 +278,6 @@ class _AddGroupPageState extends State<AddGroupPage> {
             child: Container(
               decoration: const BoxDecoration(
                 color: Color(0xFFE0E0E0),
-              
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: 20),
@@ -229,22 +308,23 @@ class _AddGroupPageState extends State<AddGroupPage> {
                       ),
                       child: Column(
                         children: friends.map((friend) {
+                          final isCurrentUser = friend.id == currentUser?.uid;
                           return CheckboxListTile(
-                            value: selectedFriendIds.contains(friend.id),
+                            value: isCurrentUser ? true : selectedFriendIds.contains(friend.id),
                             activeColor: const Color(0xFF043E50),
                             checkColor: Colors.white,
-                            onChanged: (bool? value) {
+                            onChanged: isCurrentUser ? null : (bool? value) {
                               _toggleFriendSelection(friend.id);
                             },
                             title: Text(
-                              friend.name,
+                              friend.name + (isCurrentUser ? ' (You)' : ''),
                               style: GoogleFonts.poppins(
-                                fontSize: 14,
+                                fontSize: 18,
                                 color: Colors.black87,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            subtitle: Text(
+                            subtitle: isCurrentUser ? null : Text(
                               friend.email,
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
@@ -252,6 +332,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
                               ),
                             ),
                             controlAffinity: ListTileControlAffinity.trailing,
+                            contentPadding: EdgeInsets.zero,
                           );
                         }).toList(),
                       ),
@@ -259,34 +340,28 @@ class _AddGroupPageState extends State<AddGroupPage> {
 
                     const SizedBox(height: 20),
 
-                    // SAVE button
+                    // Save Button
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _saveGroup,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF043E50),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                      child: ElevatedButton(
+                        onPressed: _saveGroup,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF043E50),
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            "Save",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        ),
+                        child: Text(
+                          'Create Group',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
