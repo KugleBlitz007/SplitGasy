@@ -44,6 +44,14 @@ class _NewBillPageState extends State<NewBillPage> {
 
   Future<void> _submitBill() async {
     if (_formKey.currentState!.validate() && _selectedPayer != null && _selectedSplitMethod != null) {
+      final billName = _billNameController.text.trim();
+      if (billName.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a bill name')),
+        );
+        return;
+      }
+
       setState(() {
         _isSubmitting = true;
       });
@@ -63,7 +71,7 @@ class _NewBillPageState extends State<NewBillPage> {
 
         // Create the bill document
         final billData = {
-          'name': _billNameController.text,
+          'name': billName,
           'groupId': widget.groupId,
           'paidById': _selectedPayer,
           'amount': amount,
@@ -123,7 +131,7 @@ class _NewBillPageState extends State<NewBillPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: TextField(
+                          child: TextFormField(
                             controller: _billNameController,
                             autofocus: true,
                             style: const TextStyle(
@@ -142,7 +150,17 @@ class _NewBillPageState extends State<NewBillPage> {
                               fillColor: Colors.transparent,
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                              errorStyle: const TextStyle(
+                                color: Color(0xFFFFC2C2),
+                                fontSize: 14,
+                              ),
                             ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter a bill name';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                         IconButton(
@@ -261,6 +279,88 @@ class _NewBillPageState extends State<NewBillPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
+
+                    // Amount Field
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Amount',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              const Text(
+                                '\$',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _amountController,
+                                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  decoration: InputDecoration(
+                                    border: const UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.white,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    enabledBorder: const UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.white,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    focusedBorder: const UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    contentPadding: EdgeInsets.zero,
+                                    isDense: true,
+                                    hintText: '0',
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey.shade400,
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter an amount';
+                                    }
+                                    if (double.tryParse(value) == null) {
+                                      return 'Please enter a valid number';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -268,33 +368,14 @@ class _NewBillPageState extends State<NewBillPage> {
               // Rest of the form fields
               Expanded(
                 child: Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.only(top: 20),
+                  color: Colors.grey[200],
+                  padding: const EdgeInsets.only(top: 30),
                   child: SingleChildScrollView(
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Amount Field
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: CustomTextField(
-                              controller: _amountController,
-                              hintText: 'Amount',
-                              obscureText: false,
-                              keyboardType: TextInputType.numberWithOptions(decimal: true),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter an amount';
-                                }
-                                if (double.tryParse(value) == null) {
-                                  return 'Please enter a valid number';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
                           const SizedBox(height: 20),
                         ],
                       ),

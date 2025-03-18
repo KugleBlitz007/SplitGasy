@@ -6,6 +6,7 @@ import 'package:splitgasy/components/bill_list_item.dart';
 import 'new_bill_page.dart';
 import 'edit_group.dart';
 import 'package:splitgasy/Models/app_user.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class GroupPage extends StatelessWidget {
   final String groupName;
@@ -111,56 +112,130 @@ class GroupPage extends StatelessWidget {
 
                     const SizedBox(height: 15),
 
-                    // Available Balance
-                    Row(
-                      children: [
-                        // Left column (Texts: "You Owe" & "You Are Owed")
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "You Owe",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white54,
-                                  fontSize: 17,
-                                ),
-                              ),
-                              const SizedBox(height: 22),
-                              Text(
-                                "You Are Owed",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white54,
-                                  fontSize: 17,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Right column (Balances)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                    // Overall Balance
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('groups')
+                          .doc(groupId)
+                          .collection('bills')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const CircularProgressIndicator();
+                        }
+
+                        final bills = snapshot.data!.docs;
+                        final currentUser = FirebaseAuth.instance.currentUser;
+                        if (currentUser == null) {
+                          return const Text('Not signed in');
+                        }
+
+                        // Calculate balances per person
+                        Map<String, double> balancesByPerson = {};
+                        for (var member in members) {
+                          balancesByPerson[member['id']] = 0.0;
+                        }
+
+                        for (var bill in bills) {
+                          final billData = bill.data() as Map<String, dynamic>;
+                          final amount = (billData['amount'] as num).toDouble();
+                          final paidById = billData['paidById'] as String;
+                          final participants = List<Map<String, dynamic>>.from(billData['participants']);
+                          final splitMethod = billData['splitMethod'] as String? ?? 'equal';
+                          
+                          // Calculate shares for this bill
+                          Map<String, double> shares = {};
+                          for (var participant in participants) {
+                            final userId = participant['id'] as String;
+                            double share;
+                            switch (splitMethod.toLowerCase()) {
+                              case 'custom':
+                                share = (participant['share'] as num?)?.toDouble() ?? 0.0;
+                                break;
+                              case 'proportional':
+                                // TODO: Implement proportional split
+                                share = amount / participants.length;
+                                break;
+                              default: // 'equal'
+                                share = amount / participants.length;
+                            }
+                            shares[userId] = share;
+                          }
+
+                          // Update balances
+                          for (var userId in shares.keys) {
+                            if (userId == paidById) {
+                              // This person paid, they are owed everyone else's shares
+                              balancesByPerson[userId] = (balancesByPerson[userId] ?? 0.0) + 
+                                  (amount - (shares[userId] ?? 0.0));
+                            } else {
+                              // This person owes their share to the payer
+                              balancesByPerson[userId] = (balancesByPerson[userId] ?? 0.0) - 
+                                  (shares[userId] ?? 0.0);
+                            }
+                          }
+                        }
+
+                        // Calculate overall balance for current user
+                        final overallBalance = balancesByPerson[currentUser.uid] ?? 0.0;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Overall balance
                             Text(
-                              "\$120.03", // Example amount you owe
+                              overallBalance >= 0 
+                                ? "You are owed \$${overallBalance.abs().toStringAsFixed(2)} overall"
+                                : "You owe \$${overallBalance.abs().toStringAsFixed(2)} overall",
                               style: GoogleFonts.poppins(
-                                color: const Color.fromARGB(255, 255, 194, 194),
-                                fontSize: 25,
-                                fontWeight: FontWeight.bold,
+                                color: overallBalance >= 0 
+                                  ? const Color.fromARGB(255, 193, 255, 225)
+                                  : const Color.fromARGB(255, 255, 194, 194),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 10),
-                            Text(
-                              "\$85.26", // Example amount you are owed
-                              style: GoogleFonts.poppins(
-                                color: const Color.fromARGB(255, 193, 255, 225),
-                                fontSize: 25,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            const SizedBox(height: 16),
+
+                            // Individual balances
+                            ...members.where((m) => m['id'] != currentUser.uid).map((member) {
+                              final balance = balancesByPerson[member['id']] ?? 0.0;
+                              // Invert the balance since we're showing it from current user's perspective
+                              final displayBalance = -balance;
+                              
+                              if (displayBalance == 0) return const SizedBox.shrink();
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: displayBalance > 0
+                                          ? "${member['name']} owes you "
+                                          : "You owe ${member['name']} ",
+                                      ),
+                                      TextSpan(
+                                        text: "\$${displayBalance.abs().toStringAsFixed(2)}",
+                                        style: TextStyle(
+                                          color: displayBalance > 0
+                                            ? const Color.fromARGB(255, 193, 255, 225)
+                                            : const Color.fromARGB(255, 255, 194, 194),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }),
                           ],
-                        ),
-                      ],
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 30),
@@ -266,7 +341,10 @@ class GroupPage extends StatelessWidget {
                                   title: bill['name'] as String? ?? 'Unnamed Bill',
                                   amount: (bill['amount'] as num?)?.toDouble() ?? 0.0,
                                   paidBy: payer['name'] as String? ?? 'Unknown',
+                                  paidById: bill['paidById'] as String,
                                   date: (bill['date'] as Timestamp).toDate(),
+                                  participants: List<Map<String, dynamic>>.from(bill['participants'] ?? []),
+                                  splitMethod: bill['splitMethod'] as String? ?? 'equal',
                                 );
                               },
                             );
