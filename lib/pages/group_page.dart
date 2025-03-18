@@ -5,6 +5,7 @@ import 'home_page.dart';
 import 'package:splitgasy/components/bill_list_item.dart';
 import 'new_bill_page.dart';
 import 'edit_group.dart';
+import 'group_chat.dart';
 import 'package:splitgasy/Models/app_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -245,7 +246,16 @@ class GroupPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildActionButton("Chat", Icons.chat, onTap: () {
-                          // TODO: Add "Request" functionality for group page
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GroupChatPage(
+                                groupId: groupId,
+                                groupName: groupName,
+                                members: members,
+                              ),
+                            ),
+                          );
                         }),
                         _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
                           // TODO: Add "Settle Up" functionality for group page

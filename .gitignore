@@ -44,6 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+<<<<<<< Updated upstream
 # Generated plugin files
 **/generated_plugin_registrant.cc
 **/generated_plugin_registrant.h
@@ -52,3 +53,11 @@ app.*.map.json
 
 # Environment variables
 .env
+=======
+.env
+
+# Ignore Flutter auto-generated files
+**/flutter/generated_plugin_registrant.*
+**/flutter/generated_plugins.cmake
+macos/Flutter/GeneratedPluginRegistrant.swift
+>>>>>>> Stashed changes
