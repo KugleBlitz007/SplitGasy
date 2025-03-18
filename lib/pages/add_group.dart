@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'search_friends.dart';
 
 class AddGroupPage extends StatefulWidget {
   const AddGroupPage({Key? key}) : super(key: key);
@@ -14,11 +15,26 @@ class _AddGroupPageState extends State<AddGroupPage> {
 
   // Sample list of friends (replace with actual data from Firestore if needed).
   final List<Map<String, dynamic>> friends = [
-    {'id': '1', 'name': 'Matitika', 'selected': false},
-    {'id': '2', 'name': 'Dera', 'selected': false},
-    {'id': '3', 'name': 'Johann', 'selected': false},
-    {'id': '4', 'name': 'Syd', 'selected': false},
+    //{'id': '1', 'name': '...', 'selected': false},
   ];
+
+  // 🔹 Navigate to SearchPage and Get Selected Users
+  Future<void> openSearchPage() async {
+    final List<Map<String, dynamic>>? selectedUsers = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SearchPage(existingFriends: friends)),
+    );
+
+    if (selectedUsers != null && selectedUsers.isNotEmpty) {
+      setState(() {
+        for (var user in selectedUsers) {
+          if (!friends.any((friend) => friend['id'] == user['id'])) {
+            friends.add({'id': user['id'], 'name': user['name'], 'selected': false});
+          }
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -47,7 +63,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
     // Gather selected friend names into a single comma-separated string.
     final selectedFriends = friends
         .where((f) => f['selected'] == true)
-        .map((f) => f['name'] as String)
+        .map((f) => f['id'] as String)
         .toList();
 
     if (selectedFriends.isEmpty) {
@@ -81,12 +97,26 @@ class _AddGroupPageState extends State<AddGroupPage> {
   }
 
   // Called when the "Add friends" icon is tapped (optional).
-  void _addFriend() {
-    // TODO: Implement "Add Friend" functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add Friend functionality not implemented yet')),
-    );
+ void _addFriend() async {
+  final List<Map<String, dynamic>>? selectedUsers = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => SearchPage(existingFriends: friends), // Pass existing friends
+    ),
+  );
+
+  // 🔹 If users are selected, update the friends list
+  if (selectedUsers != null && selectedUsers.isNotEmpty) {
+    setState(() {
+      for (var user in selectedUsers) {
+        if (!friends.any((friend) => friend['id'] == user['id'])) {
+          friends.add({'id': user['id'], 'name': user['name'], 'selected': false});
+        }
+      }
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +127,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
           children: [
             // TOP SECTION (Green header + back button + icon + texts).
             Container(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 30),
               decoration: const BoxDecoration(
                 color: Color.fromARGB(255, 1, 87, 77),
               ),
