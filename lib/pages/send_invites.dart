@@ -106,58 +106,67 @@ class _SendInvitesPageState extends State<SendInvitesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE0E0E0),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // TOP SECTION
-            Container(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 30),
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(255, 1, 87, 77),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.person_add, color: Colors.white),
-                            onPressed: _addFriend,
-                          ),
-                          Text(
-                            "Add friends",
-                            style: GoogleFonts.poppins(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Send Friend Invitations",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+      backgroundColor: const Color(0xFF043E50),
+      body: Column(
+        children: [
+          // TOP SECTION
+          Container(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: MediaQuery.of(context).padding.top + 20,
+              bottom: 30
             ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF043E50),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.group_add, color: Colors.white),
+                          onPressed: _addFriend,
+                        ),
+                        Text(
+                          "Add friends",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Send Friend Invitations",
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
 
-            // FRIENDS LIST SECTION
-            Expanded(
+          // FRIENDS LIST SECTION
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFE0E0E0),
+              ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Column(
@@ -171,7 +180,7 @@ class _SendInvitesPageState extends State<SendInvitesPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: const Color.fromARGB(255, 1, 87, 77),
+                            color: const Color(0xFF043E50),
                           ),
                         ),
                       ),
@@ -187,12 +196,23 @@ class _SendInvitesPageState extends State<SendInvitesPage> {
                       ),
                       child: Column(
                         children: selectedUsers.map((friend) {
-                          return ListTile(
+                          return CheckboxListTile(
+                            value: true,
+                            activeColor: const Color(0xFF043E50),
+                            checkColor: Colors.white,
+                            onChanged: (bool? value) {
+                              if (value == false) {
+                                setState(() {
+                                  selectedUsers.removeWhere((f) => f.id == friend.id);
+                                });
+                              }
+                            },
                             title: Text(
                               friend.name,
                               style: GoogleFonts.poppins(
-                                fontSize: 14,
+                                fontSize: 18,
                                 color: Colors.black87,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             subtitle: Text(
@@ -202,14 +222,8 @@ class _SendInvitesPageState extends State<SendInvitesPage> {
                                 color: Colors.grey[600],
                               ),
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () {
-                                setState(() {
-                                  selectedUsers.removeWhere((f) => f.id == friend.id);
-                                });
-                              },
-                            ),
+                            controlAffinity: ListTileControlAffinity.trailing,
+                            contentPadding: EdgeInsets.zero,
                           );
                         }).toList(),
                       ),
@@ -217,39 +231,34 @@ class _SendInvitesPageState extends State<SendInvitesPage> {
 
                     const SizedBox(height: 20),
 
-                    // SEND INVITATIONS button
+                    // Send Button
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _sendInvitations,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 1, 87, 77),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                      child: ElevatedButton(
+                        onPressed: _sendInvitations,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF043E50),
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            "Send Invitations",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        ),
+                        child: Text(
+                          'Send Invitations',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
