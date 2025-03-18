@@ -85,44 +85,99 @@ class _SearchPageState extends State<SearchPage> {
             ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // 🔹 Search Bar
-            TextField(
-              controller: _searchController,
-              onChanged: (value) => searchUsers(value),
-              decoration: InputDecoration(
-                labelText: "Search for people...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+      backgroundColor: const Color(0xFF043E50),
+      body: Container(
+        color: const Color(0xFF043E50),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // 🔹 Search Bar
+              TextField(
+                controller: _searchController,
+                onChanged: (value) => searchUsers(value),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  labelText: "Search for people...",
+                  labelStyle: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
+                  filled: true,
+                  fillColor: Colors.black26,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // 🔹 Display Search Results with Selection
-            Expanded(
-              child: searchResults.isEmpty
-                  ? const Center(child: Text("No users found"))
-                  : ListView.builder(
-                      itemCount: searchResults.length,
-                      itemBuilder: (context, index) {
-                        final user = searchResults[index];
-                        return CheckboxListTile(
-                          title: Text(user.name),
-                          subtitle: Text(user.email),
-                          value: selectedUsers.contains(user),
-                          onChanged: (selected) {
-                            toggleUserSelection(user);
-                          },
-                        );
-                      },
-                    ),
-            ),
-          ],
+              // 🔹 Display Search Results with Selection
+              Expanded(
+                child: searchResults.isEmpty
+                    ? Center(
+                        child: Text(
+                          "No users found",
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: searchResults.length,
+                        itemBuilder: (context, index) {
+                          final user = searchResults[index];
+                          return CheckboxListTile(
+                            title: Text(
+                              user.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Text(
+                              user.email,
+                              style: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 12,
+                              ),
+                            ),
+                            value: selectedUsers.contains(user),
+                            onChanged: (selected) {
+                              toggleUserSelection(user);
+                            },
+                            activeColor: const Color(0xFF043E50),
+                            checkColor: Colors.white,
+                            tileColor: Colors.black26,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            side: const BorderSide(color: Colors.white, width: 2),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

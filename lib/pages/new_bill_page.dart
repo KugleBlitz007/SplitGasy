@@ -113,7 +113,7 @@ class _NewBillPageState extends State<NewBillPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Container(
-        color: const Color(0xFF333533),
+        color: const Color(0xFF043E50),
         child: SafeArea(
           bottom: false,
           child: Column(
@@ -122,7 +122,7 @@ class _NewBillPageState extends State<NewBillPage> {
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF333533),
+                  color: Color(0xFF043E50),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +186,7 @@ class _NewBillPageState extends State<NewBillPage> {
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade900,
+                        color: Colors.black26,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -239,7 +239,7 @@ class _NewBillPageState extends State<NewBillPage> {
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade900,
+                        color: Colors.black26,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -368,7 +368,7 @@ class _NewBillPageState extends State<NewBillPage> {
               // Rest of the form fields
               Expanded(
                 child: Container(
-                  color: Colors.grey[200],
+                  color: Colors.grey[100],
                   padding: const EdgeInsets.only(top: 30),
                   child: SingleChildScrollView(
                     child: Form(

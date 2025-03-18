@@ -25,7 +25,7 @@ class GroupPage extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 25,
-            backgroundColor: Colors.white12,
+            backgroundColor: Colors.white.withOpacity(0.15),
             child: Icon(icon, color: Colors.white, size: 24),
           ),
           const SizedBox(height: 5),
@@ -67,7 +67,7 @@ class GroupPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF333533),
+                  color: Color(0xFF043E50),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +93,7 @@ class GroupPage extends StatelessWidget {
                             Text(
                               "Your Group",
                               style: TextStyle(
-                                color: Colors.white70,
+                                color: Colors.white.withOpacity(0.7),
                                 fontSize: 13,
                               ),
                             ),
@@ -189,7 +189,7 @@ class GroupPage extends StatelessWidget {
                                 : "You owe \$${overallBalance.abs().toStringAsFixed(2)} overall",
                               style: GoogleFonts.poppins(
                                 color: overallBalance >= 0 
-                                  ? const Color.fromARGB(255, 193, 255, 225)
+                                  ? const Color.fromARGB(255, 109, 234, 197)
                                   : const Color.fromARGB(255, 255, 194, 194),
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
@@ -224,7 +224,7 @@ class GroupPage extends StatelessWidget {
                                         text: "\$${displayBalance.abs().toStringAsFixed(2)}",
                                         style: TextStyle(
                                           color: displayBalance > 0
-                                            ? const Color.fromARGB(255, 193, 255, 225)
+                                            ? const Color.fromARGB(255, 109, 234, 197)
                                             : const Color.fromARGB(255, 255, 194, 194),
                                         ),
                                       ),
@@ -304,7 +304,7 @@ class GroupPage extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF333533),
+                          color: Color(0xFF043E50),
                         ),
                       ),
 

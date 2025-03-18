@@ -120,58 +120,66 @@ class _EditGroupPageState extends State<EditGroupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE0E0E0),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // TOP SECTION
-            Container(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 30),
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(255, 1, 87, 77),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.group_add, color: Colors.white),
-                            onPressed: _addFriend,
-                          ),
-                          Text(
-                            "Add friends",
-                            style: GoogleFonts.poppins(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Edit Group: ${widget.groupName}",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+      backgroundColor: const Color(0xFF043E50),
+      body: Column(
+        children: [
+          // TOP SECTION
+          Container(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: MediaQuery.of(context).padding.top + 20,
+              bottom: 30
             ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF043E50),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.group_add, color: Colors.white),
+                          onPressed: _addFriend,
+                        ),
+                        Text(
+                          "Add friends",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Edit Group: ${widget.groupName}",
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-            // FRIENDS LIST SECTION
-            Expanded(
+          // FRIENDS LIST SECTION
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFE0E0E0),
+              ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Column(
@@ -185,7 +193,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: const Color.fromARGB(255, 1, 87, 77),
+                            color: const Color(0xFF043E50),
                           ),
                         ),
                       ),
@@ -207,6 +215,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: Colors.black87,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             subtitle: Text(
@@ -240,7 +249,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
                         child: ElevatedButton(
                           onPressed: _saveGroup,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 1, 87, 77),
+                            backgroundColor: const Color(0xFF043E50),
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -262,8 +272,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

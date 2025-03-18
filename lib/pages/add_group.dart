@@ -117,80 +117,89 @@ class _AddGroupPageState extends State<AddGroupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE0E0E0),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // TOP SECTION
-            Container(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 30),
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(255, 1, 87, 77),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.group_add, color: Colors.white),
-                            onPressed: _addFriend,
-                          ),
-                          Text(
-                            "Add friends",
-                            style: GoogleFonts.poppins(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Create a group",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  TextField(
-                    controller: _groupNameController,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintText: 'Group Name',
-                      hintStyle: GoogleFonts.poppins(
-                        color: Colors.grey[600],
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      backgroundColor: const Color(0xFF043E50),
+      body: Column(
+        children: [
+          // TOP SECTION
+          Container(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: MediaQuery.of(context).padding.top + 20,
+              bottom: 30
             ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF043E50),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.group_add, color: Colors.white),
+                          onPressed: _addFriend,
+                        ),
+                        Text(
+                          "Add friends",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Create a group",
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 20),
 
-            // FRIENDS LIST SECTION
-            Expanded(
+                TextField(
+                  controller: _groupNameController,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: 'Group Name',
+                    hintStyle: GoogleFonts.poppins(
+                      color: Colors.grey[600],
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // FRIENDS LIST SECTION
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFE0E0E0),
+              
+              ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Column(
@@ -204,7 +213,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: const Color.fromARGB(255, 1, 87, 77),
+                            color: const Color(0xFF043E50),
                           ),
                         ),
                       ),
@@ -222,7 +231,8 @@ class _AddGroupPageState extends State<AddGroupPage> {
                         children: friends.map((friend) {
                           return CheckboxListTile(
                             value: selectedFriendIds.contains(friend.id),
-                            activeColor: const Color.fromARGB(255, 1, 87, 77),
+                            activeColor: const Color(0xFF043E50),
+                            checkColor: Colors.white,
                             onChanged: (bool? value) {
                               _toggleFriendSelection(friend.id);
                             },
@@ -231,6 +241,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: Colors.black87,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             subtitle: Text(
@@ -257,7 +268,8 @@ class _AddGroupPageState extends State<AddGroupPage> {
                         child: ElevatedButton(
                           onPressed: _saveGroup,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 1, 87, 77),
+                            backgroundColor: const Color(0xFF043E50),
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -279,8 +291,8 @@ class _AddGroupPageState extends State<AddGroupPage> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
