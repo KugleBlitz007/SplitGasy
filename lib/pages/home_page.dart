@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:splitgasy/components/group_list_item.dart';
 import 'package:splitgasy/pages/add_group.dart';
+import 'package:splitgasy/pages/login_or_signup_page.dart';
 import 'search_friends.dart';
 import 'activity_page.dart';
 
