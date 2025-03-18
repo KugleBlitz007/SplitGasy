@@ -135,130 +135,6 @@ class ActivityPage extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      return const Scaffold(
-        body: Center(child: Text('Not signed in')),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF043E50),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: Color(0xFF043E50),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    "Activity",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Activity List
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(currentUser.uid)
-                    .collection('activity')
-                    .orderBy('timestamp', descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Error loading activities',
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey[600],
-                          fontSize: 16,
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final activities = snapshot.data!.docs;
-                  if (activities.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No activity yet',
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey[600],
-                          fontSize: 16,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: activities.length,
-                    itemBuilder: (context, index) {
-                      final activity = activities[index].data() as Map<String, dynamic>;
-                      final type = activity['type'] as String;
-                      final status = activity['status'] as String?;
-                      final fromUserName = activity['fromUserName'] as String?;
-                      final invitationId = activities[index].id;
-                      final fromUserId = activity['fromUserId'] as String?;
-
-                      Widget activityWidget;
-                      switch (type) {
-                        case 'friend_request':
-                          activityWidget = _buildFriendRequestCard(
-                            context,
-                            fromUserName ?? 'Unknown User',
-                            status ?? 'pending',
-                            invitationId,
-                            fromUserId,
-                          );
-                          break;
-                        case 'friend_request_accepted':
-                          activityWidget = _buildFriendRequestAcceptedCard(
-                            fromUserName ?? 'Unknown User',
-                          );
-                          break;
-                        default:
-                          activityWidget = const SizedBox.shrink();
-                      }
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: activityWidget,
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildFriendRequestCard(
     BuildContext context,
     String fromUserName,
@@ -393,6 +269,269 @@ class ActivityPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSettleBalanceCard(
+    String fromUserName,
+    double amount,
+    bool isPaid,
+    String status,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: const Color(0xFF043E50),
+            child: Icon(
+              isPaid ? Icons.check_circle : Icons.attach_money,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  status == 'settled'
+                      ? 'You and $fromUserName are now settled up!'
+                      : isPaid
+                          ? '$fromUserName paid you \$${amount.toStringAsFixed(2)}'
+                          : 'You paid $fromUserName \$${amount.toStringAsFixed(2)}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (status == 'settled')
+                  Text(
+                    'All balances have been cleared',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.green,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpenseUpdateCard(
+    String fromUserName,
+    String groupName,
+    double amount,
+    String expenseName,
+    bool isCreator,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: Color(0xFF043E50),
+            child: Icon(Icons.receipt_long, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isCreator
+                      ? 'You added a new expense'
+                      : '$fromUserName added a new expense',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  '"$expenseName" - \$${amount.toStringAsFixed(2)}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  'Group: $groupName',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(child: Text('Not signed in')),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF043E50),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Color(0xFF043E50),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    "Activity",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Activity List
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .collection('activity')
+                    .orderBy('timestamp', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Error loading activities',
+                        style: GoogleFonts.poppins(
+                          color: Colors.grey[600],
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final activities = snapshot.data!.docs;
+                  if (activities.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No activity yet',
+                        style: GoogleFonts.poppins(
+                          color: Colors.grey[600],
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: activities.length,
+                    itemBuilder: (context, index) {
+                      final activity = activities[index].data() as Map<String, dynamic>;
+                      final type = activity['type'] as String;
+                      final status = activity['status'] as String?;
+                      final fromUserName = activity['fromUserName'] as String?;
+                      final invitationId = activities[index].id;
+                      final fromUserId = activity['fromUserId'] as String?;
+
+                      Widget activityWidget;
+                      switch (type) {
+                        case 'friend_request':
+                          activityWidget = _buildFriendRequestCard(
+                            context,
+                            fromUserName ?? 'Unknown User',
+                            status ?? 'pending',
+                            invitationId,
+                            fromUserId,
+                          );
+                          break;
+                        case 'friend_request_accepted':
+                          activityWidget = _buildFriendRequestAcceptedCard(
+                            fromUserName ?? 'Unknown User',
+                          );
+                          break;
+                        case 'settle_balance':
+                          activityWidget = _buildSettleBalanceCard(
+                            fromUserName ?? 'Unknown User',
+                            (activity['amount'] as num).toDouble(),
+                            activity['isPaid'] as bool? ?? false,
+                            activity['status'] as String? ?? 'pending',
+                          );
+                          break;
+                        case 'expense_update':
+                          activityWidget = _buildExpenseUpdateCard(
+                            fromUserName ?? 'Unknown User',
+                            activity['groupName'] as String? ?? 'Unknown Group',
+                            (activity['amount'] as num).toDouble(),
+                            activity['expenseName'] as String? ?? 'Expense',
+                            activity['isCreator'] as bool? ?? false,
+                          );
+                          break;
+                        default:
+                          activityWidget = const SizedBox.shrink();
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: activityWidget,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

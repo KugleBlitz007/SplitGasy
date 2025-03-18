@@ -66,6 +66,34 @@ class BalanceService {
         'date': FieldValue.serverTimestamp(),
       });
 
+      // Get user names for activity notifications
+      final fromUserDoc = await db.collection('users').doc(fromUserId).get();
+      final toUserDoc = await db.collection('users').doc(toUserId).get();
+      final fromUserName = fromUserDoc.data()?['name'] ?? 'Unknown User';
+      final toUserName = toUserDoc.data()?['name'] ?? 'Unknown User';
+
+      // Create activity notification for the person who paid
+      await db.collection('users').doc(fromUserId).collection('activity').add({
+        'type': 'settle_balance',
+        'fromUserId': toUserId,
+        'fromUserName': toUserName,
+        'amount': currentAmount,
+        'isPaid': true,
+        'status': 'settled',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // Create activity notification for the person who received the payment
+      await db.collection('users').doc(toUserId).collection('activity').add({
+        'type': 'settle_balance',
+        'fromUserId': fromUserId,
+        'fromUserName': fromUserName,
+        'amount': currentAmount,
+        'isPaid': false,
+        'status': 'settled',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
       // Delete the balance document
       await balanceDoc.docs.first.reference.delete();
     }

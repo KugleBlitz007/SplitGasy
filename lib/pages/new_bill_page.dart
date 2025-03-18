@@ -111,6 +111,44 @@ class _NewBillPageState extends State<NewBillPage> {
         (billData['participants'] as List).cast<Map<String, dynamic>>(),
       );
 
+      // Get the group name for the activity notification
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .get();
+      final groupName = groupDoc.data()?['name'] ?? 'Unknown Group';
+
+      // Get the creator's name
+      final creatorDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .get();
+      final creatorName = creatorDoc.data()?['name'] ?? 'Unknown User';
+
+      // Create activity notifications for all participants
+      final batch = FirebaseFirestore.instance.batch();
+      for (var participant in widget.groupMembers) {
+        // Create notification for everyone, including the creator
+        final activityRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(participant['id'])
+            .collection('activity')
+            .doc();
+
+        batch.set(activityRef, {
+          'type': 'expense_update',
+          'fromUserId': currentUser.uid,
+          'fromUserName': creatorName,
+          'groupId': widget.groupId,
+          'groupName': groupName,
+          'amount': amount,
+          'expenseName': _billNameController.text.trim(),
+          'timestamp': FieldValue.serverTimestamp(),
+          'isCreator': participant['id'] == currentUser.uid,  // Add flag to identify if this is the creator's notification
+        });
+      }
+      await batch.commit();
+
       if (mounted) {
         Navigator.pop(context, true); // Return true to indicate success
       }
