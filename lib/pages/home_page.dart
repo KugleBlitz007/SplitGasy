@@ -31,6 +31,61 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // delete account function
+  Future<void> deleteAccount(BuildContext context) async {
+    try {
+      // Show confirmation dialog
+      bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delete Account'),
+          content: const Text('Are you sure you want to delete your account?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF043E50))),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        // Delete user data from Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .delete();
+
+        // Delete the user account
+        await user.delete();
+
+        // Navigate to login page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginOrSignupPage()),
+        );
+      }
+    } catch (e) {
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text('Failed to delete account: ${e.toString()}'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +97,24 @@ class _HomePageState extends State<HomePage> {
                       child: ListView(
                         children: [
                           ListTile(
-                            title: const Text("Placeholder"),
+                            title: Text(
+                              "Placeholder",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Color(0xFF043E50),
+                              ),
+                            ),
                             onTap: (){},
                           ),
                           ListTile(
-                            title: Text("Search Friends"),
-                            leading: const Icon(Icons.search),
+                            title: Text(
+                              "Search Friends",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Color(0xFF043E50),
+                              ),
+                            ),
+                            leading: const Icon(Icons.search, color: Color(0xFF043E50)),
                             onTap: (){
                                Navigator.push(
                                   context,
@@ -55,17 +122,38 @@ class _HomePageState extends State<HomePage> {
                       );
                             },
                           ),
-                      ListTile(
-                        title: const Text("Logout"),
-                        leading: const Icon(Icons.logout),
-                        onTap: () {
-                          Navigator.pop(context); 
-                          signOut(context); 
-                        },
+                          ListTile(
+                            title: Text(
+                              "Delete Account",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Color(0xFF043E50),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            leading: const Icon(Icons.delete_forever, color: Color(0xFF043E50)),
+                            onTap: () {
+                              Navigator.pop(context);
+                              deleteAccount(context);
+                            },
+                          ),
+                          ListTile(
+                            title: Text(
+                              "Logout",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Color(0xFF043E50),
+                              ),
+                            ),
+                            leading: const Icon(Icons.logout, color: Color(0xFF043E50)),
+                            onTap: () {
+                              Navigator.pop(context); 
+                              signOut(context); 
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
       body: Column(
         children: [
