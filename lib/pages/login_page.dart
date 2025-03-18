@@ -85,7 +85,19 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 175),
+                const SizedBox(height: 100),
+
+                // App Icon
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'lib/assets/icon/play_store_512.png',
+                    height: 100,
+                    width: 100,
+                  ),
+                ),
+
+                const SizedBox(height: 25),
           
                 // Welcome message
                 Text(
@@ -179,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
                 
                 // google button
           
-                const SizedBox(height: 150),
+                const SizedBox(height: 50),
           
                 // Register
                 Row(
