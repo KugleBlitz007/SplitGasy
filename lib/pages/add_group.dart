@@ -63,7 +63,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
     // Gather selected friend names into a single comma-separated string.
     final selectedFriends = friends
         .where((f) => f['selected'] == true)
-        .map((f) => f['id'] as String)
+        .map((f) => f['name'] as String)
         .toList();
 
     if (selectedFriends.isEmpty) {
