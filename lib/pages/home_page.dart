@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:splitgasy/components/group_list_item.dart';
 import 'package:splitgasy/pages/add_group.dart';
 import 'package:splitgasy/pages/login_or_signup_page.dart';
-import 'package:splitgasy/pages/search_friends.dart';
 import 'package:splitgasy/pages/activity_page.dart';
 import 'package:splitgasy/pages/send_invites.dart';
 import 'package:splitgasy/services/balance_service.dart';
@@ -402,7 +401,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Welcome to SplitGasy",
+                          "Welcome to Slizzy",
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 13,

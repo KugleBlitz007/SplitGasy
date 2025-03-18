@@ -101,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
           
                 // Welcome message
                 Text(
-                  'Welcome to SplitGasy!',
+                  'Welcome to Slizzy!',
                   style: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 25,
