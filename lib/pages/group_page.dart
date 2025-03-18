@@ -7,7 +7,11 @@ import 'new_bill_page.dart';
 import 'edit_group.dart';
 import 'group_chat.dart';
 import 'package:splitgasy/Models/app_user.dart';
+import 'package:splitgasy/Models/bill_calculation.dart';
+import 'package:splitgasy/services/bill_calculation_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:splitgasy/Models/balance.dart';
+import 'package:splitgasy/services/balance_service.dart';
 
 class GroupPage extends StatelessWidget {
   final String groupName;
@@ -116,69 +120,37 @@ class GroupPage extends StatelessWidget {
                     // Overall Balance
                     StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
-                          .collection('groups')
-                          .doc(groupId)
-                          .collection('bills')
+                          .collection('balances')
+                          .where('groupId', isEqualTo: groupId)
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
                           return const CircularProgressIndicator();
                         }
 
-                        final bills = snapshot.data!.docs;
                         final currentUser = FirebaseAuth.instance.currentUser;
                         if (currentUser == null) {
                           return const Text('Not signed in');
                         }
 
-                        // Calculate balances per person
-                        Map<String, double> balancesByPerson = {};
-                        for (var member in members) {
-                          balancesByPerson[member['id']] = 0.0;
-                        }
+                        // Calculate net balances
+                        final balances = <String, double>{};
+                        for (var doc in snapshot.data!.docs) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          final fromUserId = data['fromUserId'] as String;
+                          final toUserId = data['toUserId'] as String;
+                          final amount = (data['amount'] as num).toDouble();
 
-                        for (var bill in bills) {
-                          final billData = bill.data() as Map<String, dynamic>;
-                          final amount = (billData['amount'] as num).toDouble();
-                          final paidById = billData['paidById'] as String;
-                          final participants = List<Map<String, dynamic>>.from(billData['participants']);
-                          final splitMethod = billData['splitMethod'] as String? ?? 'equal';
-                          
-                          // Calculate shares for this bill
-                          Map<String, double> shares = {};
-                          for (var participant in participants) {
-                            final userId = participant['id'] as String;
-                            double share;
-                            switch (splitMethod.toLowerCase()) {
-                              case 'custom':
-                                share = (participant['share'] as num?)?.toDouble() ?? 0.0;
-                                break;
-                              case 'proportional':
-                                // TODO: Implement proportional split
-                                share = amount / participants.length;
-                                break;
-                              default: // 'equal'
-                                share = amount / participants.length;
-                            }
-                            shares[userId] = share;
-                          }
-
-                          // Update balances
-                          for (var userId in shares.keys) {
-                            if (userId == paidById) {
-                              // This person paid, they are owed everyone else's shares
-                              balancesByPerson[userId] = (balancesByPerson[userId] ?? 0.0) + 
-                                  (amount - (shares[userId] ?? 0.0));
-                            } else {
-                              // This person owes their share to the payer
-                              balancesByPerson[userId] = (balancesByPerson[userId] ?? 0.0) - 
-                                  (shares[userId] ?? 0.0);
-                            }
+                          if (fromUserId == currentUser.uid) {
+                            // User owes money
+                            balances[toUserId] = (balances[toUserId] ?? 0.0) - amount;
+                          } else if (toUserId == currentUser.uid) {
+                            // User is owed money
+                            balances[fromUserId] = (balances[fromUserId] ?? 0.0) + amount;
                           }
                         }
 
-                        // Calculate overall balance for current user
-                        final overallBalance = balancesByPerson[currentUser.uid] ?? 0.0;
+                        final overallBalance = balances.values.fold(0.0, (sum, amount) => sum + amount);
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,13 +170,15 @@ class GroupPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
 
-                            // Individual balances
-                            ...members.where((m) => m['id'] != currentUser.uid).map((member) {
-                              final balance = balancesByPerson[member['id']] ?? 0.0;
-                              // Invert the balance since we're showing it from current user's perspective
-                              final displayBalance = -balance;
-                              
-                              if (displayBalance == 0) return const SizedBox.shrink();
+                            // Net balances with each person
+                            ...balances.entries.map((entry) {
+                              final balance = entry.value;
+                              final otherPerson = members.firstWhere(
+                                (m) => m['id'] == entry.key,
+                                orElse: () => {'name': 'Unknown'},
+                              );
+
+                              if (balance == 0) return const SizedBox.shrink();
 
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 8),
@@ -217,14 +191,14 @@ class GroupPage extends StatelessWidget {
                                     ),
                                     children: [
                                       TextSpan(
-                                        text: displayBalance > 0
-                                          ? "${member['name']} owes you "
-                                          : "You owe ${member['name']} ",
+                                        text: balance > 0
+                                          ? "${otherPerson['name']} owes you "
+                                          : "You owe ${otherPerson['name']} ",
                                       ),
                                       TextSpan(
-                                        text: "\$${displayBalance.abs().toStringAsFixed(2)}",
+                                        text: "\$${balance.abs().toStringAsFixed(2)}",
                                         style: TextStyle(
-                                          color: displayBalance > 0
+                                          color: balance > 0
                                             ? const Color.fromARGB(255, 109, 234, 197)
                                             : const Color.fromARGB(255, 255, 194, 194),
                                         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:splitgasy/services/balance_service.dart';
 
 class NewBillPage extends StatefulWidget {
   final String groupId;
@@ -24,6 +25,8 @@ class _NewBillPageState extends State<NewBillPage> {
   String? _selectedPayer;
   String? _selectedSplitMethod;
   bool _isSubmitting = false;
+  double _amount = 0.0;
+  List<Map<String, dynamic>> _participants = [];
 
   // Split methods
   final List<String> _splitMethods = [
@@ -31,6 +34,20 @@ class _NewBillPageState extends State<NewBillPage> {
     'Proportional',
     'Custom',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeParticipants();
+  }
+
+  void _initializeParticipants() {
+    _participants = widget.groupMembers.map((member) => {
+      'id': member['id'],
+      'name': member['name'],
+      'share': 0.0,
+    }).toList();
+  }
 
   @override
   void dispose() {
@@ -41,67 +58,76 @@ class _NewBillPageState extends State<NewBillPage> {
   }
 
   Future<void> _submitBill() async {
-    if (_formKey.currentState!.validate() && _selectedPayer != null && _selectedSplitMethod != null) {
-      final billName = _billNameController.text.trim();
-      if (billName.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a bill name')),
-        );
-        return;
-      }
+    if (!_formKey.currentState!.validate() || _selectedPayer == null || _selectedSplitMethod == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all required fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
-      setState(() {
-        _isSubmitting = true;
-      });
+    setState(() {
+      _isSubmitting = true;
+    });
 
-      try {
-        final currentUser = FirebaseAuth.instance.currentUser;
-        if (currentUser == null) return;
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
 
-        // Create initial participants list with equal shares
-        final amount = double.parse(_amountController.text);
-        final equalShare = amount / widget.groupMembers.length;
-        final participants = widget.groupMembers.map((member) => {
+      final amount = double.parse(_amountController.text);
+      final equalShare = amount / widget.groupMembers.length;
+
+      // Create the bill document
+      final billData = {
+        'name': _billNameController.text.trim(),
+        'groupId': widget.groupId,
+        'paidById': _selectedPayer,
+        'amount': amount,
+        'date': Timestamp.now(),
+        'splitMethod': _selectedSplitMethod?.toLowerCase() ?? 'equal',
+        'participants': widget.groupMembers.map((member) => {
           ...member,
           'share': equalShare,
           'paid': member['id'] == _selectedPayer,
-        }).toList();
+        }).toList(),
+        'createdBy': currentUser.uid,
+        'createdAt': Timestamp.now(),
+      };
 
-        // Create the bill document
-        final billData = {
-          'name': billName,
-          'groupId': widget.groupId,
-          'paidById': _selectedPayer,
-          'amount': amount,
-          'date': Timestamp.now(),
-          'splitMethod': _selectedSplitMethod?.toLowerCase() ?? 'equal',
-          'participants': participants,
-          'createdBy': currentUser.uid,
-          'createdAt': Timestamp.now(),
-        };
+      // Add the bill to Firestore
+      final billRef = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .collection('bills')
+          .add(billData);
 
-        // Add the bill to Firestore
-        await FirebaseFirestore.instance
-            .collection('groups')
-            .doc(widget.groupId)
-            .collection('bills')
-            .add(billData);
+      // Update balances for the new bill
+      await BalanceService.updateBalancesForBill(
+        widget.groupId,
+        billRef.id,
+        _selectedPayer!,
+        (billData['participants'] as List).cast<Map<String, dynamic>>(),
+      );
 
-        if (mounted) {
-          Navigator.pop(context, true); // Return true to indicate success
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error creating bill: $e')),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isSubmitting = false;
-          });
-        }
+      if (mounted) {
+        Navigator.pop(context, true); // Return true to indicate success
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating bill: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
       }
     }
   }
