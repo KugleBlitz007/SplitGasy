@@ -86,6 +86,72 @@ class GroupPage extends StatelessWidget {
                         )
                       ],
                     ),
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final groupData = snapshot.data!.data() as Map<String, dynamic>;
+        final members = (groupData['members'] as List<dynamic>?)
+            ?.map((m) => m as Map<String, dynamic>)
+            .toList() ?? [];
+
+        return Scaffold(
+          body: Column(
+            children: [
+              // Top part (no changes here)
+              Container(
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF333533),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Greeting and Notification Icon row
+                    Row(
+                     children: [
+                        // Back IconButton
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomePage()),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 10),
+                        // Group info
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Your Group",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              groupName,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
 
                     const SizedBox(height: 15),
 
