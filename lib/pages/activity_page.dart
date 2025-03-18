@@ -145,7 +145,7 @@ class ActivityPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE0E0E0),
+      backgroundColor: const Color(0xFF043E50),
       body: SafeArea(
         child: Column(
           children: [
