@@ -8,6 +8,7 @@ import 'package:splitgasy/pages/login_or_signup_page.dart';
 import 'package:splitgasy/pages/search_friends.dart';
 import 'package:splitgasy/pages/activity_page.dart';
 import 'package:splitgasy/pages/send_invites.dart';
+import 'package:splitgasy/services/balance_service.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -81,6 +82,224 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  void _showSettleUpDialog(BuildContext context) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    // Get all balances where the user owes money or is owed money
+    final balancesSnapshot = await FirebaseFirestore.instance
+        .collection('balances')
+        .where('fromUserId', isEqualTo: currentUser.uid)
+        .get();
+
+    final owedToUserSnapshot = await FirebaseFirestore.instance
+        .collection('balances')
+        .where('toUserId', isEqualTo: currentUser.uid)
+        .get();
+
+    // Combine and process balances
+    final Map<String, Map<String, dynamic>> netBalances = {};
+
+    // Process balances where user owes money
+    for (var doc in balancesSnapshot.docs) {
+      final data = doc.data();
+      final toUserId = data['toUserId'] as String;
+      final amount = (data['amount'] as num).toDouble();
+      
+      netBalances[toUserId] = {
+        'amount': -(amount),
+        'groupId': data['groupId'],
+      };
+    }
+
+    // Process balances where user is owed money
+    for (var doc in owedToUserSnapshot.docs) {
+      final data = doc.data();
+      final fromUserId = data['fromUserId'] as String;
+      final amount = (data['amount'] as num).toDouble();
+      
+      if (netBalances.containsKey(fromUserId)) {
+        netBalances[fromUserId]!['amount'] = 
+            (netBalances[fromUserId]!['amount'] as double) + amount;
+      } else {
+        netBalances[fromUserId] = {
+          'amount': amount,
+          'groupId': data['groupId'],
+        };
+      }
+    }
+
+    if (netBalances.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No balances to settle')),
+        );
+      }
+      return;
+    }
+
+    // Get user details for all involved users
+    final userDetails = <String, String>{};
+    for (var userId in netBalances.keys) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      userDetails[userId] = userDoc.data()?['name'] ?? 'Unknown User';
+    }
+
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.white.withOpacity(0.95),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.account_balance_wallet,
+                color: Color(0xFF043E50),
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Settle Up',
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF043E50),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          content: Container(
+            constraints: const BoxConstraints(maxHeight: 400),
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: netBalances.entries.map((entry) {
+                  final userId = entry.key;
+                  final balance = entry.value['amount'] as double;
+                  final userName = userDetails[userId] ?? 'Unknown User';
+                  final groupId = entry.value['groupId'] as String;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      title: Text(
+                        userName,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Text(
+                        balance > 0
+                            ? 'Owes you \$${balance.abs().toStringAsFixed(2)}'
+                            : 'You owe \$${balance.abs().toStringAsFixed(2)}',
+                        style: GoogleFonts.poppins(
+                          color: balance > 0 ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                      trailing: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          try {
+                            if (balance < 0) {
+                              // Current user owes money
+                              await BalanceService.settleUp(
+                                groupId,
+                                currentUser.uid,
+                                userId,
+                              );
+                            } else {
+                              // Current user is owed money
+                              await BalanceService.settleUp(
+                                groupId,
+                                userId,
+                                currentUser.uid,
+                              );
+                            }
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Settled up with $userName'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error settling up: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF043E50),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: Text(
+                          'Settle',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF043E50),
+              ),
+              child: Text(
+                'Close',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ],
         ),
@@ -277,7 +496,11 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildActionButton("New Bill", Icons.receipt),
-                    _buildActionButton("Settle Up", Icons.monetization_on),
+                    _buildActionButton(
+                      "Settle Up",
+                      Icons.monetization_on,
+                      onTap: () => _showSettleUpDialog(context),
+                    ),
                     _buildActionButton("New Group", Icons.add, onTap: () {
                      Navigator.push(
                       context,
