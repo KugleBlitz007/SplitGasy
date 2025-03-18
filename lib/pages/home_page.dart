@@ -5,8 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:splitgasy/components/group_list_item.dart';
 import 'package:splitgasy/pages/add_group.dart';
 import 'package:splitgasy/pages/login_or_signup_page.dart';
-import 'search_friends.dart';
-import 'activity_page.dart';
+import 'package:splitgasy/pages/search_friends.dart';
+import 'package:splitgasy/pages/activity_page.dart';
+import 'package:splitgasy/pages/send_invites.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -122,11 +123,12 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             leading: const Icon(Icons.search, color: Color(0xFF043E50)),
-                            onTap: (){
-                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const Placeholder()),
-                      );
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SendInvitesPage()),
+                              );
                             },
                           ),
                           ListTile(
