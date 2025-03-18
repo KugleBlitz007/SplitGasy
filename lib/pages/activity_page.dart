@@ -3,9 +3,34 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:splitgasy/Models/app_user.dart';
+import 'package:splitgasy/services/notification_service.dart';
+import 'package:splitgasy/pages/group_chat_page.dart';
 
-class ActivityPage extends StatelessWidget {
-  const ActivityPage({Key? key}) : super(key: key);
+class ActivityPage extends StatefulWidget {
+  const ActivityPage({super.key});
+
+  @override
+  State<ActivityPage> createState() => _ActivityPageState();
+}
+
+class _ActivityPageState extends State<ActivityPage> {
+  String _formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return 'Just now';
+    
+    final now = DateTime.now();
+    final date = timestamp.toDate();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
 
   Future<void> _handleFriendRequest(
     BuildContext context,
@@ -90,7 +115,7 @@ class ActivityPage extends StatelessWidget {
               });
         }
 
-        final currentUserData = currentUserDoc.data() as Map<String, dynamic>? ?? {
+        final currentUserData = currentUserDoc.data() ?? {
           'name': currentUser.displayName ?? 'User',
         };
 
@@ -395,6 +420,100 @@ class ActivityPage extends StatelessWidget {
     );
   }
 
+  Widget _buildChatMessageCard(Map<String, dynamic> activity) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () async {
+          // Mark notification as read
+          await NotificationService.markNotificationAsRead(activity['id']);
+          
+          // Navigate to group chat and scroll to the specific message
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GroupChatPage(
+                  groupId: activity['groupId'],
+                  groupName: activity['groupName'],
+                  members: [], // You'll need to pass the members list here
+                ),
+              ),
+            ).then((_) {
+              // After returning from the chat, refresh the activity list
+              setState(() {});
+            });
+          }
+        },
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: const Color(0xFF043E50),
+              child: const Icon(
+                Icons.chat_bubble_outline,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${activity['fromUserName']} sent a message in ${activity['groupName']}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    activity['message'],
+                    style: GoogleFonts.poppins(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatTimestamp(activity['timestamp']),
+                    style: GoogleFonts.poppins(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (!activity['isRead'])
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF043E50),
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -478,53 +597,41 @@ class ActivityPage extends StatelessWidget {
                     itemCount: activities.length,
                     itemBuilder: (context, index) {
                       final activity = activities[index].data() as Map<String, dynamic>;
-                      final type = activity['type'] as String;
-                      final status = activity['status'] as String?;
-                      final fromUserName = activity['fromUserName'] as String?;
-                      final invitationId = activities[index].id;
-                      final fromUserId = activity['fromUserId'] as String?;
+                      activity['id'] = activities[index].id;
 
-                      Widget activityWidget;
-                      switch (type) {
+                      switch (activity['type']) {
                         case 'friend_request':
-                          activityWidget = _buildFriendRequestCard(
+                          return _buildFriendRequestCard(
                             context,
-                            fromUserName ?? 'Unknown User',
-                            status ?? 'pending',
-                            invitationId,
-                            fromUserId,
+                            activity['fromUserName'] ?? 'Unknown User',
+                            activity['status'] ?? 'pending',
+                            activity['id'],
+                            activity['fromUserId'] as String?,
                           );
-                          break;
                         case 'friend_request_accepted':
-                          activityWidget = _buildFriendRequestAcceptedCard(
-                            fromUserName ?? 'Unknown User',
+                          return _buildFriendRequestAcceptedCard(
+                            activity['fromUserName'] ?? 'Unknown User',
                           );
-                          break;
                         case 'settle_balance':
-                          activityWidget = _buildSettleBalanceCard(
-                            fromUserName ?? 'Unknown User',
+                          return _buildSettleBalanceCard(
+                            activity['fromUserName'] ?? 'Unknown User',
                             (activity['amount'] as num).toDouble(),
                             activity['isPaid'] as bool? ?? false,
                             activity['status'] as String? ?? 'pending',
                           );
-                          break;
                         case 'expense_update':
-                          activityWidget = _buildExpenseUpdateCard(
-                            fromUserName ?? 'Unknown User',
+                          return _buildExpenseUpdateCard(
+                            activity['fromUserName'] ?? 'Unknown User',
                             activity['groupName'] as String? ?? 'Unknown Group',
                             (activity['amount'] as num).toDouble(),
                             activity['expenseName'] as String? ?? 'Expense',
                             activity['isCreator'] as bool? ?? false,
                           );
-                          break;
+                        case 'chat_message':
+                          return _buildChatMessageCard(activity);
                         default:
-                          activityWidget = const SizedBox.shrink();
+                          return const SizedBox.shrink();
                       }
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: activityWidget,
-                      );
                     },
                   );
                 },

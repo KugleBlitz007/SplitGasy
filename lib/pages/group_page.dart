@@ -5,7 +5,7 @@ import 'home_page.dart';
 import 'package:splitgasy/components/bill_list_item.dart';
 import 'new_bill_page.dart';
 import 'edit_group.dart';
-import 'group_chat.dart';
+import 'group_chat_page.dart';
 import 'package:splitgasy/Models/app_user.dart';
 import 'package:splitgasy/Models/bill_calculation.dart';
 import 'package:splitgasy/services/bill_calculation_service.dart';

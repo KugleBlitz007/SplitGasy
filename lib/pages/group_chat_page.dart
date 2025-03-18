@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:splitgasy/Models/app_user.dart';
+import 'package:splitgasy/services/notification_service.dart';
 
 class GroupChatPage extends StatefulWidget {
   final String groupId;
@@ -23,7 +24,7 @@ class GroupChatPage extends StatefulWidget {
 class _GroupChatPageState extends State<GroupChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final currentUser = FirebaseAuth.instance.currentUser!;
 
   @override
   void dispose() {
@@ -37,28 +38,42 @@ class _GroupChatPageState extends State<GroupChatPage> {
 
     final message = _messageController.text.trim();
     final sender = widget.members.firstWhere(
-      (m) => m['id'] == currentUser?.uid,
-      orElse: () => {'name': 'Unknown User'},
+      (member) => member['id'] == currentUser.uid,
+      orElse: () => {'id': currentUser.uid, 'name': 'Unknown User'},
     );
 
     try {
-      await FirebaseFirestore.instance
+      // Add message to Firestore
+      final messageRef = await FirebaseFirestore.instance
           .collection('groups')
           .doc(widget.groupId)
           .collection('messages')
           .add({
         'text': message,
-        'senderId': currentUser?.uid,
+        'senderId': currentUser.uid,
         'senderName': sender['name'],
         'timestamp': FieldValue.serverTimestamp(),
       });
 
+      // Create notifications for all members
+      await NotificationService.createChatNotification(
+        groupId: widget.groupId,
+        groupName: widget.groupName,
+        senderId: currentUser.uid,
+        senderName: sender['name'],
+        message: message,
+        messageId: messageRef.id,
+        recipients: widget.members,
+      );
+
       _messageController.clear();
       _scrollToBottom();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending message: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sending message: $e')),
+        );
+      }
     }
   }
 
@@ -141,7 +156,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index].data() as Map<String, dynamic>;
-                    final isMe = message['senderId'] == currentUser?.uid;
+                    final isMe = message['senderId'] == currentUser.uid;
 
                     return Align(
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
