@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'app_user.dart';
 
 class Balance {
   final String userId;
@@ -15,13 +14,13 @@ class Balance {
   });
 
   /// Creates a Balance from a Firestore DocumentSnapshot.
-  factory Balance.fromSnapshot(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory Balance.fromSnapshot(DocumentSnapshot snapshot) {
+    final data = snapshot.data() as Map<String, dynamic>;
     return Balance(
       userId: data['userId'] as String,
       groupId: data['groupId'] as String,
       amount: (data['amount'] as num).toDouble(),
-      lastUpdated: (data['lastUpdated'] as Timestamp).toDate(),
+      lastUpdated: DateTime.parse(data['lastUpdated'] as String),
     );
   }
 
@@ -31,7 +30,7 @@ class Balance {
       'userId': userId,
       'groupId': groupId,
       'amount': amount,
-      'lastUpdated': Timestamp.fromDate(lastUpdated),
+      'lastUpdated': lastUpdated.toIso8601String(),
     };
   }
 
@@ -45,20 +44,6 @@ class Balance {
       groupId: map['groupId'],
       amount: map['amount'].toDouble(),
       lastUpdated: DateTime.parse(map['lastUpdated']),
-    );
-  }
-
-  Balance copyWith({
-    String? userId,
-    String? groupId,
-    double? amount,
-    DateTime? lastUpdated,
-  }) {
-    return Balance(
-      userId: userId ?? this.userId,
-      groupId: groupId ?? this.groupId,
-      amount: amount ?? this.amount,
-      lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
 }

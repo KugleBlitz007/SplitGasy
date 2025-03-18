@@ -3,11 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:splitgasy/components/group_list_item.dart';
-import 'package:splitgasy/pages/group_page.dart';
-import 'login_or_signup_page.dart';
 import 'package:splitgasy/pages/add_group.dart';
-import 'search_friends.dart';
-
+import 'login_or_signup_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

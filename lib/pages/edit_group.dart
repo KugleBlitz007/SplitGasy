@@ -55,17 +55,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
     super.dispose();
   }
 
-  // Toggles selection of a friend from the list
-  void _toggleFriendSelection(String userId) {
-    setState(() {
-      if (selectedFriendIds.contains(userId)) {
-        selectedFriendIds.remove(userId);
-      } else {
-        selectedFriendIds.add(userId);
-      }
-    });
-  }
-
   // Updates the group members in Firestore
   Future<void> _saveGroup() async {
     if (friends.isEmpty) {

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'app_user.dart';
 
 class Bill {
   final String id;
