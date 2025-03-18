@@ -308,11 +308,7 @@ class _HomePageState extends State<HomePage> {
                       color: Color(0xFF333533),
                     ),
                   ),
-                  // const SizedBox(height: 10),
-                  // Use of StreamBuilder to load groups from Firestore
-                  // "Your Groups" heading
-
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
                   // Use a StreamBuilder to load groups from Firestore
                   Expanded(
@@ -335,6 +331,7 @@ class _HomePageState extends State<HomePage> {
                         }
 
                         return ListView.builder(
+                          padding: EdgeInsets.zero,
                           itemCount: docs.length,
                           itemBuilder: (context, index) {
                             final doc = docs[index];
