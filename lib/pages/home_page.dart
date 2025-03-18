@@ -7,6 +7,7 @@ import 'package:splitgasy/pages/group_page.dart';
 import 'login_or_signup_page.dart';
 import 'package:splitgasy/pages/add_group.dart';
 import 'search_friends.dart';
+import 'activity_page.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -98,13 +99,20 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           ListTile(
                             title: Text(
-                              "Placeholder",
+                              "Activity",
                               style: GoogleFonts.poppins(
                                 fontSize: 16,
                                 color: Color(0xFF043E50),
                               ),
                             ),
-                            onTap: (){},
+                            leading: const Icon(Icons.notifications, color: Color(0xFF043E50)),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ActivityPage()),
+                              );
+                            },
                           ),
                           ListTile(
                             title: Text(
