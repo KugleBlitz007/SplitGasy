@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'home_page.dart';
-
+import 'package:splitgasy/components/bill_list_item.dart';
+import 'new_bill_page.dart';
 class GroupPage extends StatelessWidget {
   final String groupName;
 
@@ -33,44 +34,16 @@ class GroupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildExpenseCategory({
-    required String title,
-    List<String> items = const [],
-  }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: ExpansionTile(
-        title: Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF333533),
-          ),
-        ),
-        children: items.map((item) {
-          return ListTile(
-            title: Text(
-              item,
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          // Top part 
+          // Top part (no changes here)
           Container(
             padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
             decoration: const BoxDecoration(
-              color: Color(0xFF333533), // Dark green color
+              color: Color(0xFF333533),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +158,6 @@ class GroupPage extends StatelessWidget {
                     _buildActionButton("Remove", Icons.group_remove, onTap: () {
                       // TODO: Add "New Bill" functionality for group page
                     }),
-
                   ],
                 ),
               ],
@@ -195,18 +167,28 @@ class GroupPage extends StatelessWidget {
           // Bottom part (list of expense categories and bottom buttons)
           Expanded(
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               decoration: const BoxDecoration(
                 color: Color(0xFFE0E0E0), // Light grey background
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // List of expense categories
+                  Text(
+                    "Bills",
+                    style: GoogleFonts.poppins(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF333533),
+                    ),
+                  ),
+
+                  // List of expense categories using the new component
                   Expanded(
                     child: ListView(
+                      padding: EdgeInsets.only(top: 20),
                       children: [
-                        _buildExpenseCategory(
+                        BillListItem(
                           title: "Groceries",
                           items: const [
                             "Milk \$2.50",
@@ -214,20 +196,47 @@ class GroupPage extends StatelessWidget {
                             "Eggs \$3.20",
                             "Cheese \$4.50",
                           ],
+                          onViewDetails: () {
+                            // TODO: Navigate to expense details
+                            print("View expense details");
+                          },
+
                         ),
-                        _buildExpenseCategory(title: "Furniture"),
-                        _buildExpenseCategory(title: "Shared car"),
-                        _buildExpenseCategory(title: "Rent"),
-                        _buildExpenseCategory(title: "Wifi"),
+                        BillListItem(
+                          title: "Furniture",
+                         
+                        ),
+                        BillListItem(
+                          title: "Shared car",
+                          
+                        ),
+                        BillListItem(
+                          title: "Rent",
+                          
+                        ),
+                        BillListItem(
+                          title: "Wifi",
+                          
+                        ),
                       ],
                     ),
                   ),
-
                 ],
               ),
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF043E50),
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NewBillPage()),
+          );
+        },
       ),
     );
   }
