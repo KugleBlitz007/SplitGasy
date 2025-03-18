@@ -3,6 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'home_page.dart';
 import 'package:splitgasy/components/bill_list_item.dart';
 import 'new_bill_page.dart';
+import 'edit_group.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:splitgasy/Models/app_user.dart';
+
 class GroupPage extends StatelessWidget {
   final String groupName;
   final String groupId;
@@ -144,7 +148,7 @@ class GroupPage extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                // Action Buttons row (copied from HomePage)
+                // Action Buttons row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -154,8 +158,33 @@ class GroupPage extends StatelessWidget {
                     _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
                       // TODO: Add "Settle Up" functionality for group page
                     }),
-                    _buildActionButton("Add ", Icons.group_add, onTap: () {
-                      // TODO: Add "New Group" functionality for group page
+                    _buildActionButton("Add", Icons.group_add, onTap: () async {
+                      // Fetch current group members
+                      final groupDoc = await FirebaseFirestore.instance
+                          .collection('groups')
+                          .doc(groupId)
+                          .get();
+                      
+                      if (groupDoc.exists) {
+                        final membersData = groupDoc.data()?['members'] as List<dynamic>;
+                        final currentMembers = membersData.map((member) => AppUser(
+                          id: member['id'],
+                          name: member['name'],
+                          email: member['email'],
+                        )).toList();
+
+                        // Navigate to EditGroupPage
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditGroupPage(
+                              groupId: groupId,
+                              groupName: groupName,
+                              currentMembers: currentMembers,
+                            ),
+                          ),
+                        );
+                      }
                     }),
                     _buildActionButton("Remove", Icons.group_remove, onTap: () {
                       // TODO: Add "New Bill" functionality for group page

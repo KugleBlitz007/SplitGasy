@@ -27,7 +27,6 @@ class Expense {
       amount: (data['amount'] as num).toDouble(),
       paidBy: AppUser(
         id: data['paidBy']['id'] as String,
-        profile: data['paidBy']['profile'] as String,
         name: data['paidBy']['name'] as String,
         email: data['paidBy']['email'] as String,
       ),
@@ -47,7 +46,6 @@ class Expense {
       'amount': amount,
       'paidBy': {
         'id': paidBy.id,
-        'profile': paidBy.profile,
         'name': paidBy.name,
         'email': paidBy.email,
       },
