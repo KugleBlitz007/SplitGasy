@@ -27,10 +27,14 @@ class ActivityPage extends StatelessWidget {
           .collection('invitations')
           .doc(invitationId);
 
-      batch.update(invitationRef, {
-        'status': accept ? 'accepted' : 'rejected',
-        'respondedAt': FieldValue.serverTimestamp(),
-      });
+      // Check if invitation exists before updating
+      final invitationDoc = await invitationRef.get();
+      if (invitationDoc.exists) {
+        batch.update(invitationRef, {
+          'status': accept ? 'accepted' : 'rejected',
+          'respondedAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       // Update activity status
       final activityRef = FirebaseFirestore.instance
@@ -39,13 +43,17 @@ class ActivityPage extends StatelessWidget {
           .collection('activity')
           .doc(invitationId);
 
-      batch.update(activityRef, {
-        'status': accept ? 'accepted' : 'rejected',
-        'respondedAt': FieldValue.serverTimestamp(),
-      });
+      // Check if activity exists before updating
+      final activityDoc = await activityRef.get();
+      if (activityDoc.exists) {
+        batch.update(activityRef, {
+          'status': accept ? 'accepted' : 'rejected',
+          'respondedAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       if (accept) {
-        // Add to current user's friends
+        // Add to current user's friends collection
         final currentUserFriendsRef = FirebaseFirestore.instance
             .collection('users')
             .doc(currentUser.uid)
@@ -58,7 +66,7 @@ class ActivityPage extends StatelessWidget {
           'addedAt': FieldValue.serverTimestamp(),
         });
 
-        // Add to sender's friends
+        // Add to sender's friends collection
         final senderFriendsRef = FirebaseFirestore.instance
             .collection('users')
             .doc(fromUserId)
@@ -69,7 +77,22 @@ class ActivityPage extends StatelessWidget {
             .collection('users')
             .doc(currentUser.uid)
             .get();
-        final currentUserData = currentUserDoc.data() as Map<String, dynamic>;
+        
+        // Create user document if it doesn't exist
+        if (!currentUserDoc.exists) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .set({
+                'name': currentUser.displayName ?? 'User',
+                'email': currentUser.email ?? '',
+                'createdAt': FieldValue.serverTimestamp(),
+              });
+        }
+
+        final currentUserData = currentUserDoc.data() as Map<String, dynamic>? ?? {
+          'name': currentUser.displayName ?? 'User',
+        };
 
         batch.set(senderFriendsRef, {
           'id': currentUser.uid,
@@ -94,19 +117,21 @@ class ActivityPage extends StatelessWidget {
 
       await batch.commit();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            accept
-                ? 'Friend request accepted!'
-                : 'Friend request rejected',
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              accept ? 'Friend request accepted!' : 'Friend request rejected',
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -159,6 +184,18 @@ class ActivityPage extends StatelessWidget {
                     .orderBy('timestamp', descending: true)
                     .snapshots(),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Error loading activities',
+                        style: GoogleFonts.poppins(
+                          color: Colors.grey[600],
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
+                  }
+
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
@@ -183,9 +220,9 @@ class ActivityPage extends StatelessWidget {
                       final activity = activities[index].data() as Map<String, dynamic>;
                       final type = activity['type'] as String;
                       final status = activity['status'] as String?;
-                      final timestamp = activity['timestamp'] as Timestamp?;
                       final fromUserName = activity['fromUserName'] as String?;
-                      final invitationId = activity['invitationId'] as String?;
+                      final invitationId = activities[index].id;
+                      final fromUserId = activity['fromUserId'] as String?;
 
                       Widget activityWidget;
                       switch (type) {
@@ -195,7 +232,7 @@ class ActivityPage extends StatelessWidget {
                             fromUserName ?? 'Unknown User',
                             status ?? 'pending',
                             invitationId,
-                            activity['fromUserId'],
+                            fromUserId,
                           );
                           break;
                         case 'friend_request_accepted':
