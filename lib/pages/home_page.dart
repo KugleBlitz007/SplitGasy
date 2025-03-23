@@ -139,7 +139,28 @@ class _HomePageState extends State<HomePage> {
     if (netBalances.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No balances to settle')),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'No balances to settle',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF043E50),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
         );
       }
       return;
@@ -227,7 +248,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                       trailing: ElevatedButton(
                         onPressed: () async {
-                          Navigator.pop(context);
                           try {
                             if (balance < 0) {
                               // Current user owes money
@@ -244,52 +264,82 @@ class _HomePageState extends State<HomePage> {
                                 currentUser.uid,
                               );
                             }
+
+                            // Show success Snackbar using the root context
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.check_circle, color: Colors.white),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Successfully settled up with $userName',
-                                        style: GoogleFonts.poppins(),
-                                      ),
-                                    ],
+                              // Get the root scaffold messenger
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              
+                              // Close the dialog first
+                              Navigator.pop(context);
+
+                              // Show the snackbar after a short delay to ensure it appears after dialog dismissal
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.check_circle, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Successfully settled up with $userName',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFF046007),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.all(16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
-                                  backgroundColor: Colors.green,
-                                  duration: const Duration(seconds: 3),
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: const EdgeInsets.all(16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                              );
+                                );
+                              });
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.error_outline, color: Colors.white),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Error settling up: $e',
-                                        style: GoogleFonts.poppins(),
-                                      ),
-                                    ],
+                              // Get the root scaffold messenger
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              
+                              // Close the dialog first
+                              Navigator.pop(context);
+
+                              // Show the error snackbar after a short delay
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.error_outline, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Error settling up: $e',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFFB00020),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.all(16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
-                                  backgroundColor: Colors.red,
-                                  duration: const Duration(seconds: 3),
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: const EdgeInsets.all(16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                              );
+                                );
+                              });
                             }
                           }
                         },
@@ -350,7 +400,28 @@ class _HomePageState extends State<HomePage> {
     if (owedToUserSnapshot.docs.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No pending balances to request')),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'No pending balances to request',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF043E50),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
         );
       }
       return;
@@ -440,14 +511,13 @@ class _HomePageState extends State<HomePage> {
                       subtitle: Text(
                         'Owes you \$${amount.toStringAsFixed(2)}',
                         style: GoogleFonts.poppins(
-                          color: Colors.green,
+                          color: const Color(0xFF046007),
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
                         ),
                       ),
                       trailing: ElevatedButton(
                         onPressed: () async {
-                          Navigator.pop(context);
                           try {
                             await NotificationService.createPaymentRequestNotification(
                               groupId: groupId,
@@ -457,22 +527,82 @@ class _HomePageState extends State<HomePage> {
                               requesterId: currentUser.uid,
                               requesterName: currentUser.displayName ?? 'You',
                             );
+
+                            // Show success Snackbar using the root context
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Payment requested from $userName'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
+                              // Get the root scaffold messenger
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              
+                              // Close the dialog first
+                              Navigator.pop(context);
+
+                              // Show the snackbar after a short delay to ensure it appears after dialog dismissal
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.check_circle, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Payment requested from $userName',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFF046007),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.all(16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              });
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error requesting payment: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              // Get the root scaffold messenger
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              
+                              // Close the dialog first
+                              Navigator.pop(context);
+
+                              // Show the error snackbar after a short delay
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.error_outline, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Error requesting payment: $e',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFFB00020),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.all(16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              });
                             }
                           }
                         },
