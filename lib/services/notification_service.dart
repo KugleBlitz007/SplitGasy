@@ -69,4 +69,35 @@ class NotificationService {
         .snapshots()
         .map((snapshot) => snapshot.docs.length);
   }
+
+  // Create a payment request notification
+  static Future<void> createPaymentRequestNotification({
+    required String groupId,
+    required String toUserId,
+    required String toUserName,
+    required double amount,
+    required String requesterId,
+    required String requesterName,
+  }) async {
+    try {
+      // Create notification for the user who owes money
+      await _firestore
+          .collection('users')
+          .doc(toUserId)
+          .collection('activity')
+          .add({
+        'type': 'payment_request',
+        'groupId': groupId,
+        'fromUserId': requesterId,
+        'fromUserName': requesterName,
+        'amount': amount,
+        'status': 'pending',
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+      });
+    } catch (e) {
+      print('Error creating payment request notification: $e');
+      rethrow;
+    }
+  }
 } 

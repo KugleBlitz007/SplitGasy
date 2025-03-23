@@ -8,6 +8,7 @@ import 'package:splitgasy/pages/login_or_signup_page.dart';
 import 'package:splitgasy/pages/activity_page.dart';
 import 'package:splitgasy/pages/send_invites.dart';
 import 'package:splitgasy/services/balance_service.dart';
+import 'package:splitgasy/services/notification_service.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -246,8 +247,23 @@ class _HomePageState extends State<HomePage> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Settled up with $userName'),
+                                  content: Row(
+                                    children: [
+                                      const Icon(Icons.check_circle, color: Colors.white),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Successfully settled up with $userName',
+                                        style: GoogleFonts.poppins(),
+                                      ),
+                                    ],
+                                  ),
                                   backgroundColor: Colors.green,
+                                  duration: const Duration(seconds: 3),
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               );
                             }
@@ -255,8 +271,23 @@ class _HomePageState extends State<HomePage> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Error settling up: $e'),
+                                  content: Row(
+                                    children: [
+                                      const Icon(Icons.error_outline, color: Colors.white),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Error settling up: $e',
+                                        style: GoogleFonts.poppins(),
+                                      ),
+                                    ],
+                                  ),
                                   backgroundColor: Colors.red,
+                                  duration: const Duration(seconds: 3),
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               );
                             }
@@ -276,6 +307,189 @@ class _HomePageState extends State<HomePage> {
                         ),
                         child: Text(
                           'Settle',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF043E50),
+              ),
+              child: Text(
+                'Close',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  void _showRequestDialog(BuildContext context) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    // Get all balances where the user is owed money
+    final owedToUserSnapshot = await FirebaseFirestore.instance
+        .collection('balances')
+        .where('toUserId', isEqualTo: currentUser.uid)
+        .get();
+
+    if (owedToUserSnapshot.docs.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No pending balances to request')),
+        );
+      }
+      return;
+    }
+
+    // Get user details for all users who owe money
+    final Map<String, Map<String, dynamic>> debtors = {};
+    for (var doc in owedToUserSnapshot.docs) {
+      final data = doc.data();
+      final fromUserId = data['fromUserId'] as String;
+      final amount = (data['amount'] as num).toDouble();
+      final groupId = data['groupId'] as String;
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(fromUserId)
+          .get();
+      
+      debtors[fromUserId] = {
+        'name': userDoc.data()?['name'] ?? 'Unknown User',
+        'amount': amount,
+        'groupId': groupId,
+      };
+    }
+
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.white.withOpacity(0.95),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.request_page,
+                color: Color(0xFF043E50),
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Request Payment',
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF043E50),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          content: Container(
+            constraints: const BoxConstraints(maxHeight: 400),
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: debtors.entries.map((entry) {
+                  final userId = entry.key;
+                  final userData = entry.value;
+                  final userName = userData['name'] as String;
+                  final amount = userData['amount'] as double;
+                  final groupId = userData['groupId'] as String;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      title: Text(
+                        userName,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Owes you \$${amount.toStringAsFixed(2)}',
+                        style: GoogleFonts.poppins(
+                          color: Colors.green,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                      trailing: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          try {
+                            await NotificationService.createPaymentRequestNotification(
+                              groupId: groupId,
+                              toUserId: userId,
+                              toUserName: userName,
+                              amount: amount,
+                              requesterId: currentUser.uid,
+                              requesterName: currentUser.displayName ?? 'You',
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Payment requested from $userName'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error requesting payment: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF043E50),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: Text(
+                          'Request',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w500,
                           ),
@@ -506,7 +720,11 @@ class _HomePageState extends State<HomePage> {
                       MaterialPageRoute(builder: (context) => const AddGroupPage()),
                       );
                     }),
-                    _buildActionButton("Request", Icons.request_page),
+                    _buildActionButton(
+                      "Request",
+                      Icons.request_page,
+                      onTap: () => _showRequestDialog(context),
+                    ),
                     
                   ],
                 ),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:splitgasy/Models/app_user.dart';
 import 'package:splitgasy/services/notification_service.dart';
 import 'package:splitgasy/pages/group_chat_page.dart';
+import 'package:splitgasy/services/balance_service.dart';
 
 class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});
@@ -514,6 +514,85 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
+  Widget _buildPaymentRequestCard(Map<String, dynamic> activity) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () async {
+          // Mark notification as read
+          await NotificationService.markNotificationAsRead(activity['id']);
+          
+          if (context.mounted) {
+            // Close the activity page and return to home page
+            Navigator.pop(context);
+            
+            // The home page will show the settle up dialog automatically
+          }
+        },
+        child: Row(
+          children: [
+            const CircleAvatar(
+              backgroundColor: Color(0xFF043E50),
+              child: Icon(Icons.request_page, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${activity['fromUserName']} requested payment',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '\$${(activity['amount'] as num).toStringAsFixed(2)}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF043E50),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatTimestamp(activity['timestamp']),
+                    style: GoogleFonts.poppins(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (!activity['isRead'])
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF043E50),
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -629,6 +708,8 @@ class _ActivityPageState extends State<ActivityPage> {
                           );
                         case 'chat_message':
                           return _buildChatMessageCard(activity);
+                        case 'payment_request':
+                          return _buildPaymentRequestCard(activity);
                         default:
                           return const SizedBox.shrink();
                       }
