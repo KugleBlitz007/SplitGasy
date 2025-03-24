@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:splitgasy/Models/app_user.dart';
 import 'package:splitgasy/services/notification_service.dart';
 
 class GroupChatPage extends StatefulWidget {

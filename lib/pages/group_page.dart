@@ -8,6 +8,7 @@ import 'edit_group.dart';
 import 'group_chat_page.dart';
 import 'package:splitgasy/Models/app_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:splitgasy/services/balance_service.dart';
 
 class GroupPage extends StatelessWidget {
   final String groupName;
@@ -45,6 +46,300 @@ class GroupPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Shows a dialog for settling up balances within a specific group.
+  /// This method handles the settlement of debts between the current user and other group members.
+
+  void _showSettleUpDialog(BuildContext context, String groupId, List<Map<String, dynamic>> members) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    // Get all balances for the current group where the user owes money or is owed money
+    final balancesSnapshot = await FirebaseFirestore.instance
+        .collection('balances')
+        .where('groupId', isEqualTo: groupId)
+        .where('fromUserId', isEqualTo: currentUser.uid)
+        .get();
+
+    final owedToUserSnapshot = await FirebaseFirestore.instance
+        .collection('balances')
+        .where('groupId', isEqualTo: groupId)
+        .where('toUserId', isEqualTo: currentUser.uid)
+        .get();
+
+    // Combine and process balances
+    final Map<String, Map<String, dynamic>> netBalances = {};
+
+    // Process balances where user owes money
+    for (var doc in balancesSnapshot.docs) {
+      final data = doc.data();
+      final toUserId = data['toUserId'] as String;
+      final amount = (data['amount'] as num).toDouble();
+      
+      netBalances[toUserId] = {
+        'amount': -(amount),
+        'groupId': data['groupId'],
+      };
+    }
+
+    // Process balances where user is owed money
+    for (var doc in owedToUserSnapshot.docs) {
+      final data = doc.data();
+      final fromUserId = data['fromUserId'] as String;
+      final amount = (data['amount'] as num).toDouble();
+      
+      if (netBalances.containsKey(fromUserId)) {
+        netBalances[fromUserId]!['amount'] = 
+            (netBalances[fromUserId]!['amount'] as double) + amount;
+      } else {
+        netBalances[fromUserId] = {
+          'amount': amount,
+          'groupId': data['groupId'],
+        };
+      }
+    }
+
+    if (netBalances.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'No balances to settle in this group',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF043E50),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.white.withOpacity(0.95),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.account_balance_wallet,
+                color: Color(0xFF043E50),
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Settle Up',
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF043E50),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          content: Container(
+            constraints: const BoxConstraints(maxHeight: 400),
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: netBalances.entries.map((entry) {
+                  final userId = entry.key;
+                  final balance = entry.value['amount'] as double;
+                  final userName = members
+                      .firstWhere((m) => m['id'] == userId, orElse: () => {'name': 'Unknown User'})['name'];
+                  final groupId = entry.value['groupId'] as String;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      title: Text(
+                        userName,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Text(
+                        balance > 0
+                            ? 'Owes you \$${balance.abs().toStringAsFixed(2)}'
+                            : 'You owe \$${balance.abs().toStringAsFixed(2)}',
+                        style: GoogleFonts.poppins(
+                          color: balance > 0 ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                      trailing: ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            if (balance < 0) {
+                              // Current user owes money
+                              await BalanceService.settleUp(
+                                groupId,
+                                currentUser.uid,
+                                userId,
+                              );
+                            } else {
+                              // Current user is owed money
+                              await BalanceService.settleUp(
+                                groupId,
+                                userId,
+                                currentUser.uid,
+                              );
+                            }
+
+                            // Show success Snackbar using the root context
+                            if (context.mounted) {
+                              // Get the root scaffold messenger
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              
+                              // Close the dialog first
+                              Navigator.pop(context);
+
+                              // Show the snackbar after a short delay to ensure it appears after dialog dismissal
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.check_circle, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Successfully settled up with $userName',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFF046007),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.all(16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              });
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              // Get the root scaffold messenger
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              
+                              // Close the dialog first
+                              Navigator.pop(context);
+
+                              // Show the error snackbar after a short delay
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.error_outline, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Error settling up: $e',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFFB00020),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.all(16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              });
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF043E50),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: Text(
+                          'Settle',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF043E50),
+              ),
+              child: Text(
+                'Close',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -265,7 +560,7 @@ class GroupPage extends StatelessWidget {
                         }),
                         
                         _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
-                          // TODO: Add "Settle Up" functionality for group page
+                          _showSettleUpDialog(context, groupId, members);
                         }),
                         
                       ],

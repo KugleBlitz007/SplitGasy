@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:splitgasy/services/notification_service.dart';
 import 'package:splitgasy/pages/group_chat_page.dart';
-import 'package:splitgasy/services/balance_service.dart';
 
 class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});
