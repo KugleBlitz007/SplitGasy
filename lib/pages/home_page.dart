@@ -805,28 +805,60 @@ class _HomePageState extends State<HomePage> {
                     ),
           
                     // Right column (Balances)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.end, // Align to bottom
-                      children: [
-                        Text(
-                          "\$120.03", // You owe amount
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFFFFC2C2),
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          "\$85.26", // You are owed amount
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFFC1FFE1),
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('balances')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        double youOwe = 0.0;
+                        double youAreOwed = 0.0;
+
+                        if (snapshot.hasData) {
+                          for (var doc in snapshot.data!.docs) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            final status = data['status'] as String?;
+                            
+                            // Skip settled balances
+                            if (status == 'settled') continue;
+                            
+                            final amount = (data['amount'] as num).toDouble();
+                            final fromUserId = data['fromUserId'] as String;
+                            final toUserId = data['toUserId'] as String;
+
+                            if (fromUserId == user.uid) {
+                              // Current user owes money
+                              youOwe += amount;
+                            } else if (toUserId == user.uid) {
+                              // Current user is owed money
+                              youAreOwed += amount;
+                            }
+                          }
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.end, // Align to bottom
+                          children: [
+                            Text(
+                              "\$${youOwe.toStringAsFixed(2)}", // You owe amount
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFFFFC2C2),
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              "\$${youAreOwed.toStringAsFixed(2)}", // You are owed amount
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFFC1FFE1),
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
