@@ -241,13 +241,22 @@ class GroupPage extends StatelessWidget {
                               );
                             }
 
+                            // Remove the settled balance from netBalances
+                            netBalances.remove(userId);
+
                             // Show success Snackbar using the root context
                             if (context.mounted) {
                               // Get the root scaffold messenger
                               final scaffoldMessenger = ScaffoldMessenger.of(context);
                               
-                              // Close the dialog first
-                              Navigator.pop(context);
+                              // If there are no more balances to settle, close the dialog
+                              if (netBalances.isEmpty) {
+                                Navigator.pop(context);
+                              } else {
+                                // Otherwise, rebuild the dialog with updated balances
+                                Navigator.pop(context);
+                                _showSettleUpDialog(context, groupId, members);
+                              }
 
                               // Show the snackbar after a short delay to ensure it appears after dialog dismissal
                               Future.delayed(const Duration(milliseconds: 100), () {
@@ -457,6 +466,10 @@ class GroupPage extends StatelessWidget {
                           final fromUserId = data['fromUserId'] as String;
                           final toUserId = data['toUserId'] as String;
                           final amount = (data['amount'] as num).toDouble();
+                          final status = data['status'] as String?;
+
+                          // Skip settled balances
+                          if (status == 'settled') continue;
 
                           if (fromUserId == currentUser.uid) {
                             // User owes money
@@ -466,6 +479,9 @@ class GroupPage extends StatelessWidget {
                             balances[fromUserId] = (balances[fromUserId] ?? 0.0) + amount;
                           }
                         }
+
+                        // Remove any zero balances
+                        balances.removeWhere((_, amount) => amount == 0);
 
                         final overallBalance = balances.values.fold(0.0, (sum, amount) => sum + amount);
 
@@ -479,8 +495,8 @@ class GroupPage extends StatelessWidget {
                                 : "You owe \$${overallBalance.abs().toStringAsFixed(2)} overall",
                               style: GoogleFonts.poppins(
                                 color: overallBalance >= 0 
-                                  ? const Color.fromARGB(255, 109, 234, 197)
-                                  : const Color.fromARGB(255, 255, 194, 194),
+                                  ? const Color(0xFF6DEAC5)
+                                  : const Color(0xFFFFC2C2),
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -516,8 +532,8 @@ class GroupPage extends StatelessWidget {
                                         text: "\$${balance.abs().toStringAsFixed(2)}",
                                         style: TextStyle(
                                           color: balance > 0
-                                            ? const Color.fromARGB(255, 109, 234, 197)
-                                            : const Color.fromARGB(255, 255, 194, 194),
+                                            ? const Color(0xFF6DEAC5)
+                                            : const Color(0xFFFFC2C2),
                                         ),
                                       ),
                                     ],
