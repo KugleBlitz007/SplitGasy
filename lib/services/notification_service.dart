@@ -100,4 +100,55 @@ class NotificationService {
       rethrow;
     }
   }
+
+  // Create settlement notifications for both users
+  static Future<void> createSettlementNotifications({
+    required String groupId,
+    required String payerId,
+    required String payerName,
+    required String receiverId,
+    required String receiverName,
+    required double amount,
+  }) async {
+    try {
+      final batch = _firestore.batch();
+
+      // Notification for the payer
+      final payerNotificationRef = _firestore
+          .collection('users')
+          .doc(payerId)
+          .collection('activity')
+          .doc();
+
+      batch.set(payerNotificationRef, {
+        'type': 'settle_balance',
+        'fromUserName': receiverName,
+        'amount': amount,
+        'isPaid': false, // payer paid
+        'status': 'settled',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // Notification for the receiver
+      final receiverNotificationRef = _firestore
+          .collection('users')
+          .doc(receiverId)
+          .collection('activity')
+          .doc();
+
+      batch.set(receiverNotificationRef, {
+        'type': 'settle_balance',
+        'fromUserName': payerName,
+        'amount': amount,
+        'isPaid': true, // receiver received payment
+        'status': 'settled',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+    } catch (e) {
+      print('Error creating settlement notifications: $e');
+      rethrow;
+    }
+  }
 } 

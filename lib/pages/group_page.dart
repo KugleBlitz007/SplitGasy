@@ -9,6 +9,7 @@ import 'group_chat_page.dart';
 import 'package:splitgasy/Models/app_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:splitgasy/services/balance_service.dart';
+import 'package:splitgasy/services/notification_service.dart';
 
 class GroupPage extends StatelessWidget {
   final String groupName;
@@ -211,12 +212,32 @@ class GroupPage extends StatelessWidget {
                                 currentUser.uid,
                                 userId,
                               );
+
+                              // Create settlement notifications
+                              await NotificationService.createSettlementNotifications(
+                                groupId: groupId,
+                                payerId: currentUser.uid,
+                                payerName: currentUser.displayName ?? 'User',
+                                receiverId: userId,
+                                receiverName: userName,
+                                amount: balance.abs(),
+                              );
                             } else {
                               // Current user is owed money
                               await BalanceService.settleUp(
                                 groupId,
                                 userId,
                                 currentUser.uid,
+                              );
+
+                              // Create settlement notifications
+                              await NotificationService.createSettlementNotifications(
+                                groupId: groupId,
+                                payerId: userId,
+                                payerName: userName,
+                                receiverId: currentUser.uid,
+                                receiverName: currentUser.displayName ?? 'User',
+                                amount: balance.abs(),
                               );
                             }
 
