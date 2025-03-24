@@ -6,7 +6,7 @@ import 'package:splitgasy/Models/app_user.dart';
 import 'search_friends.dart';
 
 class SendInvitesPage extends StatefulWidget {
-  const SendInvitesPage({Key? key}) : super(key: key);
+  const SendInvitesPage({super.key});
 
   @override
   State<SendInvitesPage> createState() => _SendInvitesPageState();

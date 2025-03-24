@@ -11,11 +11,11 @@ class GroupChatPage extends StatefulWidget {
   final List<Map<String, dynamic>> members;
 
   const GroupChatPage({
-    Key? key,
+    super.key,
     required this.groupId,
     required this.groupName,
     required this.members,
-  }) : super(key: key);
+  });
 
   @override
   State<GroupChatPage> createState() => _GroupChatPageState();

@@ -5,7 +5,7 @@ import 'package:splitgasy/Models/app_user.dart';
 class SearchPage extends StatefulWidget {
   final List<AppUser> existingFriends;
 
-  const SearchPage({Key? key, required this.existingFriends}) : super(key: key);
+  const SearchPage({super.key, required this.existingFriends});
 
   @override
   _SearchPageState createState() => _SearchPageState();

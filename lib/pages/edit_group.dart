@@ -10,11 +10,11 @@ class EditGroupPage extends StatefulWidget {
   final List<AppUser> currentMembers;
 
   const EditGroupPage({
-    Key? key,
+    super.key,
     required this.groupId,
     required this.groupName,
     required this.currentMembers,
-  }) : super(key: key);
+  });
 
   @override
   State<EditGroupPage> createState() => _EditGroupPageState();

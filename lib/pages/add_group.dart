@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'search_friends.dart';
 
 class AddGroupPage extends StatefulWidget {
-  const AddGroupPage({Key? key}) : super(key: key);
+  const AddGroupPage({super.key});
 
   @override
   State<AddGroupPage> createState() => _AddGroupPageState();
@@ -37,7 +37,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
           .doc(currentUser!.uid)
           .get();
 
-      final currentUserData = currentUserDoc.data() as Map<String, dynamic>? ?? {
+      final currentUserData = currentUserDoc.data() ?? {
         'name': currentUser?.displayName ?? 'User',
         'email': currentUser?.email ?? '',
       };
@@ -141,7 +141,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
           .doc(currentUser?.uid)
           .get();
 
-      final currentUserData = currentUserDoc.data() as Map<String, dynamic>? ?? {
+      final currentUserData = currentUserDoc.data() ?? {
         'name': currentUser?.displayName ?? 'User',
         'email': currentUser?.email ?? '',
       };

@@ -150,11 +150,11 @@ class GroupListItem extends StatelessWidget {
                           context: context,
                           builder: (context) {
                             // Create a controller pre-filled with the current group name.
-                            final TextEditingController _renameController = TextEditingController(text: groupName);
+                            final TextEditingController renameController = TextEditingController(text: groupName);
                             return AlertDialog(
                               title: Text("Rename Group", style: GoogleFonts.poppins()),
                               content: TextField(
-                                controller: _renameController,
+                                controller: renameController,
                                 style: GoogleFonts.poppins(),
                                 decoration: InputDecoration(
                                   labelText: "New Group Name",
@@ -164,7 +164,7 @@ class GroupListItem extends StatelessWidget {
                               actions: [
                                 TextButton(
                                   onPressed: () async {
-                                    final newName = _renameController.text.trim();
+                                    final newName = renameController.text.trim();
                                     if (newName.isNotEmpty) {
                                       await FirebaseFirestore.instance
                                           .collection('groups')

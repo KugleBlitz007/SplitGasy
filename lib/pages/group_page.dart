@@ -7,11 +7,7 @@ import 'new_bill_page.dart';
 import 'edit_group.dart';
 import 'group_chat_page.dart';
 import 'package:splitgasy/Models/app_user.dart';
-import 'package:splitgasy/Models/bill_calculation.dart';
-import 'package:splitgasy/services/bill_calculation_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:splitgasy/Models/balance.dart';
-import 'package:splitgasy/services/balance_service.dart';
 
 class GroupPage extends StatelessWidget {
   final String groupName;

@@ -25,7 +25,7 @@ class _NewBillPageState extends State<NewBillPage> {
   String? _selectedPayer;
   String? _selectedSplitMethod;
   bool _isSubmitting = false;
-  double _amount = 0.0;
+  final double _amount = 0.0;
   List<Map<String, dynamic>> _participants = [];
 
   // Split methods
