@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:splitgasy/Models/app_user.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SearchPage extends StatefulWidget {
   final List<AppUser> existingFriends;
@@ -65,122 +66,142 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: const IconThemeData(
-          color: Colors.white70, //change your color here
-        ),
-        title: const Text("Search Users",
-        style: TextStyle(
-                            color: Colors.white70,
-                          ),
-        ),
-        backgroundColor: const Color(0xFF043E50),
-        actions: [
-          if (selectedUsers.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.check,
-              color: Colors.white70,
-              ), // Confirm Selection Button
-              onPressed: confirmSelection,
-            ),
-        ],
-      ),
       backgroundColor: const Color(0xFF043E50),
-      body: Container(
-        color: const Color(0xFF043E50),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // 🔹 Search Bar
-              TextField(
-                controller: _searchController,
-                onTap: () {
-                  _searchController.clear();
-                },
-                onChanged: (value) => searchUsers(value),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Enter friend name',
-                  hintStyle: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
-                  filled: true,
-                  fillColor: Colors.black26,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom AppBar
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Color(0xFF043E50),
               ),
-              const SizedBox(height: 20),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    "Search Friends",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (selectedUsers.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.check, color: Colors.white),
+                      onPressed: confirmSelection,
+                    ),
+                ],
+              ),
+            ),
 
-              // 🔹 Display Search Results with Selection
-              Expanded(
-                child: searchResults.isEmpty
-                    ? Center(
-                        child: Text(
-                          "No users found",
-                          style: TextStyle(
+            // Search and Results
+            Expanded(
+              child: Container(
+                color: const Color(0xFF043E50),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      // Search Bar
+                      TextField(
+                        controller: _searchController,
+                        onTap: () {
+                          _searchController.clear();
+                        },
+                        onChanged: (value) => searchUsers(value),
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Enter friend name',
+                          hintStyle: GoogleFonts.poppins(
                             color: Colors.grey.shade400,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
+                          prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
+                          filled: true,
+                          fillColor: Colors.black26,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: searchResults.length,
-                        itemBuilder: (context, index) {
-                          final user = searchResults[index];
-                          return CheckboxListTile(
-                            title: Text(
-                              user.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: Text(
-                              user.email,
-                              style: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 12,
-                              ),
-                            ),
-                            value: selectedUsers.contains(user),
-                            onChanged: (selected) {
-                              toggleUserSelection(user);
-                            },
-                            activeColor: const Color(0xFF043E50),
-                            checkColor: Colors.white,
-                            tileColor: Colors.black26,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            side: const BorderSide(color: Colors.white, width: 2),
-                          );
-                        },
                       ),
+                      const SizedBox(height: 20),
+
+                      // Search Results
+                      Expanded(
+                        child: searchResults.isEmpty
+                            ? Center(
+                                child: Text(
+                                  "No users found",
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: searchResults.length,
+                                itemBuilder: (context, index) {
+                                  final user = searchResults[index];
+                                  return CheckboxListTile(
+                                    title: Text(
+                                      user.name,
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      user.email,
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.grey.shade400,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    value: selectedUsers.contains(user),
+                                    onChanged: (selected) {
+                                      toggleUserSelection(user);
+                                    },
+                                    activeColor: const Color(0xFF043E50),
+                                    checkColor: Colors.white,
+                                    tileColor: Colors.black26,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    side: const BorderSide(color: Colors.white, width: 2),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
