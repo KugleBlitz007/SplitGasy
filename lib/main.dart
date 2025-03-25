@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart'; // Import Provider
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splitgasy/pages/auth_page.dart';
+import 'package:splitgasy/pages/onboarding_page.dart';
 import 'firebase_options.dart';
 
 // Import your providers
@@ -45,11 +48,33 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  Future<bool> _isFirstLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstLaunch = prefs.getBool('is_first_launch') ?? true;
+    
+    if (isFirstLaunch) {
+      await prefs.setBool('is_first_launch', false);
+    }
+    
+    return isFirstLaunch;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthPage(),
+      home: FutureBuilder<bool>(
+        future: _isFirstLaunch(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
+          return snapshot.data == true
+              ? const OnboardingPage()
+              : const AuthPage();
+        },
+      ),
     );
   }
 }
