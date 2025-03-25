@@ -127,6 +127,7 @@ class NotificationService {
         'isPaid': false, // payer paid
         'status': 'settled',
         'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
       });
 
       // Notification for the receiver
@@ -143,11 +144,82 @@ class NotificationService {
         'isPaid': true, // receiver received payment
         'status': 'settled',
         'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
       });
 
       await batch.commit();
     } catch (e) {
       print('Error creating settlement notifications: $e');
+      rethrow;
+    }
+  }
+
+  // Create bill creation notifications for group members
+  static Future<void> createBillNotifications({
+    required String groupId,
+    required String groupName,
+    required String billId,
+    required String billName,
+    required double amount,
+    required String creatorId,
+    required String creatorName,
+    required List<Map<String, dynamic>> participants,
+  }) async {
+    try {
+      final batch = _firestore.batch();
+      
+      // Create notifications for each participant except the creator
+      for (var participant in participants) {
+        final userId = participant['id'] as String;
+        
+        // Skip notification for the bill creator
+        if (userId == creatorId) continue;
+        
+        final notificationRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('activity')
+          .doc();
+          
+        batch.set(notificationRef, {
+          'type': 'expense_update',
+          'groupId': groupId,
+          'groupName': groupName,
+          'billId': billId,
+          'expenseName': billName,
+          'amount': amount,
+          'fromUserId': creatorId,
+          'fromUserName': creatorName,
+          'isCreator': false,
+          'timestamp': FieldValue.serverTimestamp(),
+          'isRead': false,
+        });
+      }
+      
+      // Also create a record for the creator to show in their activity
+      final creatorNotificationRef = _firestore
+        .collection('users')
+        .doc(creatorId)
+        .collection('activity')
+        .doc();
+        
+      batch.set(creatorNotificationRef, {
+        'type': 'expense_update',
+        'groupId': groupId,
+        'groupName': groupName,
+        'billId': billId,
+        'expenseName': billName,
+        'amount': amount,
+        'fromUserId': creatorId,
+        'fromUserName': creatorName,
+        'isCreator': true,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': true, // Creator has already seen it
+      });
+      
+      await batch.commit();
+    } catch (e) {
+      print('Error creating bill notifications: $e');
       rethrow;
     }
   }

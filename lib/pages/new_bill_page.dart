@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:splitgasy/services/balance_service.dart';
+import 'package:splitgasy/services/notification_service.dart';
 
 class NewBillPage extends StatefulWidget {
   final String groupId;
@@ -174,6 +175,25 @@ class _NewBillPageState extends State<NewBillPage> {
         billRef.id,
         _selectedPayer!,
         participants,
+      );
+      
+      // Get group name for notification
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .get();
+      final groupName = groupDoc.data()?['name'] as String? ?? 'Group';
+      
+      // Create activity notifications for all participants
+      await NotificationService.createBillNotifications(
+        groupId: widget.groupId,
+        groupName: groupName,
+        billId: billRef.id,
+        billName: _billNameController.text.trim(),
+        amount: totalAmount,
+        creatorId: currentUser.uid,
+        creatorName: currentUser.displayName ?? 'User',
+        participants: participants,
       );
       
       // Update the group's updatedAt field
