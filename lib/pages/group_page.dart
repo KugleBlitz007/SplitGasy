@@ -466,10 +466,6 @@ class GroupPage extends StatelessWidget {
                           final fromUserId = data['fromUserId'] as String;
                           final toUserId = data['toUserId'] as String;
                           final amount = (data['amount'] as num).toDouble();
-                          final status = data['status'] as String?;
-
-                          // Skip settled balances
-                          if (status == 'settled') continue;
 
                           if (fromUserId == currentUser.uid) {
                             // User owes money
@@ -490,13 +486,17 @@ class GroupPage extends StatelessWidget {
                           children: [
                             // Overall balance
                             Text(
-                              overallBalance >= 0 
-                                ? "You are owed \$${overallBalance.abs().toStringAsFixed(2)} overall"
-                                : "You owe \$${overallBalance.abs().toStringAsFixed(2)} overall",
+                              overallBalance == 0
+                                ? "Everyone is settled up! 🎉"
+                                : overallBalance > 0 
+                                  ? "You are owed \$${overallBalance.abs().toStringAsFixed(2)} overall"
+                                  : "You owe \$${overallBalance.abs().toStringAsFixed(2)} overall",
                               style: GoogleFonts.poppins(
-                                color: overallBalance >= 0 
+                                color: overallBalance == 0
                                   ? const Color(0xFF6DEAC5)
-                                  : const Color(0xFFFFC2C2),
+                                  : overallBalance > 0 
+                                    ? const Color(0xFF6DEAC5)
+                                    : const Color(0xFFFFC2C2),
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -504,43 +504,53 @@ class GroupPage extends StatelessWidget {
                             const SizedBox(height: 16),
 
                             // Net balances with each person
-                            ...balances.entries.map((entry) {
-                              final balance = entry.value;
-                              final otherPerson = members.firstWhere(
-                                (m) => m['id'] == entry.key,
-                                orElse: () => {'name': 'Unknown'},
-                              );
-
-                              if (balance == 0) return const SizedBox.shrink();
-
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                    children: [
-                                      TextSpan(
-                                        text: balance > 0
-                                          ? "${otherPerson['name']} owes you "
-                                          : "You owe ${otherPerson['name']} ",
-                                      ),
-                                      TextSpan(
-                                        text: "\$${balance.abs().toStringAsFixed(2)}",
-                                        style: TextStyle(
-                                          color: balance > 0
-                                            ? const Color(0xFF6DEAC5)
-                                            : const Color(0xFFFFC2C2),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                            if (balances.isEmpty)
+                              Text(
+                                "The group is all caught up!",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
                                 ),
-                              );
-                            }),
+                              )
+                            else
+                              ...balances.entries.map((entry) {
+                                final balance = entry.value;
+                                final otherPerson = members.firstWhere(
+                                  (m) => m['id'] == entry.key,
+                                  orElse: () => {'name': 'Unknown'},
+                                );
+
+                                if (balance == 0) return const SizedBox.shrink();
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: balance > 0
+                                            ? "${otherPerson['name']} owes you "
+                                            : "You owe ${otherPerson['name']} ",
+                                        ),
+                                        TextSpan(
+                                          text: "\$${balance.abs().toStringAsFixed(2)}",
+                                          style: TextStyle(
+                                            color: balance > 0
+                                              ? const Color(0xFF6DEAC5)
+                                              : const Color(0xFFFFC2C2),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
                           ],
                         );
                       },
