@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:splitgasy/services/notification_service.dart';
-import 'package:splitgasy/pages/group_chat_page.dart';
+import 'package:splizzy/services/notification_service.dart';
+import 'package:splizzy/pages/group_chat_page.dart';
 
 class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});

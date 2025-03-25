@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:splitgasy/components/custom_button.dart';
-import 'package:splitgasy/components/custom_text_field.dart';
-import 'package:splitgasy/services/auth_service.dart';
+import 'package:splizzy/components/custom_button.dart';
+import 'package:splizzy/components/custom_text_field.dart';
+import 'package:splizzy/services/auth_service.dart';
 
 import 'home_page.dart';
 

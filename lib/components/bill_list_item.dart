@@ -147,162 +147,161 @@ class _BillListItemState extends State<BillListItem> {
       child: InkWell(
         onTap: () => setState(() => _isExpanded = !_isExpanded),
         borderRadius: BorderRadius.circular(10),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF043E50).withOpacity(0.04),
-                offset: const Offset(0, 4),
-                blurRadius: 8,
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.title,
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF043E50),
-                            ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF043E50),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF043E50).withOpacity(0.06),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      widget.splitMethod.toLowerCase(),
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        color: const Color(0xFF043E50),
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF043E50).withOpacity(0.06),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    widget.splitMethod.toLowerCase(),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: const Color(0xFF043E50),
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      _isExpanded ? Icons.expand_less : Icons.expand_more,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  AnimatedRotation(
+                                    duration: const Duration(milliseconds: 200),
+                                    turns: _isExpanded ? 0.5 : 0,
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down,
                                       size: 16,
                                       color: const Color(0xFF043E50),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF043E50).withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '\$${widget.amount.toStringAsFixed(2)}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF043E50),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.person,
-                          size: 16,
-                          color: Color(0xFF6B7280),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Paid by ${widget.paidBy}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: const Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      _formatDate(widget.date),
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: const Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-                if (youOwe > 0 || youAreOwed > 0) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: youOwe > 0 
-                        ? const Color(0xFFFEE2E2).withOpacity(0.5)
-                        : const Color(0xFFDCFCE7).withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          youOwe > 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                          size: 16,
-                          color: youOwe > 0 
-                            ? const Color(0xFFDC2626)
-                            : const Color(0xFF059669),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          youOwe > 0
-                            ? 'You owe: \$${youOwe.toStringAsFixed(2)}'
-                            : 'You are owed: \$${youAreOwed.toStringAsFixed(2)}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: youOwe > 0 
-                              ? const Color(0xFFDC2626)
-                              : const Color(0xFF059669),
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF043E50).withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '\$${widget.amount.toStringAsFixed(2)}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF043E50),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
-                if (_isExpanded) ...[
-                  const SizedBox(height: 16),
-                  _buildSplitDetails(),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.person,
+                        size: 16,
+                        color: Color(0xFF6B7280),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Paid by ${widget.paidBy}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    _formatDate(widget.date),
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
                 ],
+              ),
+              if (youOwe > 0 || youAreOwed > 0) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: youOwe > 0 
+                      ? const Color(0xFFFEE2E2).withOpacity(0.5)
+                      : const Color(0xFFDCFCE7).withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        youOwe > 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                        size: 16,
+                        color: youOwe > 0 
+                          ? const Color(0xFFDC2626)
+                          : const Color(0xFF059669),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        youOwe > 0
+                          ? 'You owe: \$${youOwe.toStringAsFixed(2)}'
+                          : 'You are owed: \$${youAreOwed.toStringAsFixed(2)}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: youOwe > 0 
+                            ? const Color(0xFFDC2626)
+                            : const Color(0xFF059669),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
-            ),
+              AnimatedCrossFade(
+                firstChild: const SizedBox.shrink(),
+                secondChild: _buildSplitDetails(),
+                crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 200),
+              ),
+            ],
           ),
         ),
       ),

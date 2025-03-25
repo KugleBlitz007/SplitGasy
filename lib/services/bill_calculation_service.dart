@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:splitgasy/Models/bill_calculation.dart';
+import 'package:splizzy/Models/bill_calculation.dart';
 
 class BillCalculationService {
   static Future<List<BillCalculation>> getBillCalculations(

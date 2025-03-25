@@ -2,13 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:splitgasy/components/group_list_item.dart';
-import 'package:splitgasy/pages/add_group.dart';
-import 'package:splitgasy/pages/login_or_signup_page.dart';
-import 'package:splitgasy/pages/activity_page.dart';
-import 'package:splitgasy/pages/add_friends.dart';
-import 'package:splitgasy/services/balance_service.dart';
-import 'package:splitgasy/services/notification_service.dart';
+import 'package:splizzy/components/group_list_item.dart';
+import 'package:splizzy/pages/add_group.dart';
+import 'package:splizzy/pages/login_or_signup_page.dart';
+import 'package:splizzy/pages/activity_page.dart';
+import 'package:splizzy/pages/add_friends.dart';
+import 'package:splizzy/services/balance_service.dart';
+import 'package:splizzy/services/notification_service.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -1120,63 +1120,74 @@ class _ExpandableBalanceWidgetState extends State<_ExpandableBalanceWidget> {
                     ),
                   ],
                 ),
-                Icon(
-                  _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                  color: Colors.white70,
-                  size: 28,
+                AnimatedRotation(
+                  duration: const Duration(milliseconds: 200),
+                  turns: _expanded ? 0.5 : 0,
+                  child: Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.white70,
+                    size: 28,
+                  ),
                 ),
               ],
             ),
             
             // Expandable details section
-            if (_expanded) ...[
-              const SizedBox(height: 16),
-              const Divider(height: 1, color: Colors.white24),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Column(
                 children: [
-                  Text(
-                    "You owe",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white54,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1, color: Colors.white24),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "You owe",
+                        style: GoogleFonts.poppins(
+                          color: Colors.white54,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        "\$${widget.youOwe.toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFFFFC2C2),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    "\$${widget.youOwe.toStringAsFixed(2)}",
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xFFFFC2C2),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "You are owed",
+                        style: GoogleFonts.poppins(
+                          color: Colors.white54,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        "\$${widget.youAreOwed.toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFFC1FFE1),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "You are owed",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white54,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    "\$${widget.youAreOwed.toStringAsFixed(2)}",
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xFFC1FFE1),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 120),
+            ),
           ],
         ),
       ),

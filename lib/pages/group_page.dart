@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_page.dart';
-import 'package:splitgasy/components/bill_list_item.dart';
-import 'new_bill_page.dart';
-import 'edit_group.dart';
-import 'group_chat_page.dart';
-import 'package:splitgasy/Models/app_user.dart';
+import 'package:splizzy/components/bill_list_item.dart';
+import 'package:splizzy/pages/new_bill_page.dart';
+import 'package:splizzy/pages/edit_group.dart';
+import 'package:splizzy/pages/group_chat_page.dart';
+import 'package:splizzy/Models/app_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:splitgasy/services/balance_service.dart';
-import 'package:splitgasy/services/notification_service.dart';
+import 'package:splizzy/services/balance_service.dart';
+import 'package:splizzy/services/notification_service.dart';
 
-class GroupPage extends StatelessWidget {
+class GroupPage extends StatefulWidget {
   final String groupName;
   final String groupId;
 
@@ -21,13 +21,20 @@ class GroupPage extends StatelessWidget {
     required this.groupId,
   });
 
+  @override
+  State<GroupPage> createState() => _GroupPageState();
+}
+
+class _GroupPageState extends State<GroupPage> {
+  bool _showIndividualBalances = false;
+
   Widget _buildActionButton(String title, IconData icon, {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 80, // Fixed width for each button
+        width: 80,
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Minimize the column's height
+          mainAxisSize: MainAxisSize.min,
           children: [
             CircleAvatar(
               radius: 25,
@@ -41,7 +48,7 @@ class GroupPage extends StatelessWidget {
                 color: Colors.white,
                 fontSize: 12,
               ),
-              textAlign: TextAlign.center, // Center the text
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -377,7 +384,7 @@ class GroupPage extends StatelessWidget {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('groups')
-          .doc(groupId)
+          .doc(widget.groupId)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
@@ -396,7 +403,7 @@ class GroupPage extends StatelessWidget {
             children: [
               // Top part
               Container(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 20),
                 decoration: const BoxDecoration(
                   color: Color(0xFF043E50),
                 ),
@@ -429,7 +436,7 @@ class GroupPage extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              groupName,
+                              widget.groupName,
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 22,
@@ -447,7 +454,7 @@ class GroupPage extends StatelessWidget {
                     StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
                           .collection('balances')
-                          .where('groupId', isEqualTo: groupId)
+                          .where('groupId', isEqualTo: widget.groupId)
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
@@ -484,79 +491,142 @@ class GroupPage extends StatelessWidget {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Overall balance
-                            Text(
-                              overallBalance == 0
-                                ? "Everyone is settled up! 🎉"
-                                : overallBalance > 0 
-                                  ? "You are owed \$${overallBalance.abs().toStringAsFixed(2)} overall"
-                                  : "You owe \$${overallBalance.abs().toStringAsFixed(2)} overall",
-                              style: GoogleFonts.poppins(
-                                color: overallBalance == 0
-                                  ? const Color(0xFF6DEAC5)
-                                  : overallBalance > 0 
-                                    ? const Color(0xFF6DEAC5)
-                                    : const Color(0xFFFFC2C2),
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
+                            // Overall balance in a container
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Net balances with each person
-                            if (balances.isEmpty)
-                              Text(
-                                "The group is all caught up!",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white70,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              )
-                            else
-                              ...balances.entries.map((entry) {
-                                final balance = entry.value;
-                                final otherPerson = members.firstWhere(
-                                  (m) => m['id'] == entry.key,
-                                  orElse: () => {'name': 'Unknown'},
-                                );
-
-                                if (balance == 0) return const SizedBox.shrink();
-
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: balance > 0
-                                            ? "${otherPerson['name']} owes you "
-                                            : "You owe ${otherPerson['name']} ",
-                                        ),
-                                        TextSpan(
-                                          text: "\$${balance.abs().toStringAsFixed(2)}",
-                                          style: TextStyle(
-                                            color: balance > 0
-                                              ? const Color(0xFF6DEAC5)
-                                              : const Color(0xFFFFC2C2),
-                                          ),
-                                        ),
-                                      ],
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Overall Balance",
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                );
-                              }),
+                                  Text(
+                                    overallBalance == 0
+                                      ? "Settled up! 🎉"
+                                      : overallBalance > 0 
+                                        ? "You are owed \$${overallBalance.abs().toStringAsFixed(2)}"
+                                        : "You owe \$${overallBalance.abs().toStringAsFixed(2)}",
+                                    style: GoogleFonts.poppins(
+                                      color: overallBalance == 0
+                                        ? const Color(0xFF6DEAC5)
+                                        : overallBalance > 0 
+                                          ? const Color(0xFF6DEAC5)
+                                          : const Color(0xFFFFC2C2),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Net balances with each person in a more compact layout
+                            if (balances.isNotEmpty)
+                              GestureDetector(
+                                onTap: () => setState(() => _showIndividualBalances = !_showIndividualBalances),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 12),
+                                  curve: Curves.easeInOut,
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "Individual Balances",
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.white.withOpacity(0.8),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          AnimatedRotation(
+                                            duration: const Duration(milliseconds: 300),
+                                            turns: _showIndividualBalances ? 0.5 : 0,
+                                            child: Icon(
+                                              Icons.keyboard_arrow_down,
+                                              color: Colors.white.withOpacity(0.8),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      AnimatedCrossFade(
+                                        firstChild: const SizedBox.shrink(),
+                                        secondChild: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const SizedBox(height: 12),
+                                            ...balances.entries.map((entry) {
+                                              final balance = entry.value;
+                                              final otherPerson = members.firstWhere(
+                                                (m) => m['id'] == entry.key,
+                                                orElse: () => {'name': 'Unknown'},
+                                              );
+
+                                              if (balance == 0) return const SizedBox.shrink();
+
+                                              return Padding(
+                                                padding: const EdgeInsets.only(bottom: 6),
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        balance > 0
+                                                          ? "${otherPerson['name']} owes you"
+                                                          : "You owe ${otherPerson['name']}",
+                                                        style: GoogleFonts.poppins(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                          fontWeight: FontWeight.w400,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      "\$${balance.abs().toStringAsFixed(2)}",
+                                                      style: GoogleFonts.poppins(
+                                                        color: balance > 0
+                                                          ? const Color(0xFF6DEAC5)
+                                                          : const Color(0xFFFFC2C2),
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            }),
+                                          ],
+                                        ),
+                                        crossFadeState: _showIndividualBalances ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                                        duration: const Duration(milliseconds: 150),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                           ],
                         );
                       },
                     ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 20),
 
                     // Action Buttons row
                     Row(
@@ -567,8 +637,8 @@ class GroupPage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) => GroupChatPage(
-                                groupId: groupId,
-                                groupName: groupName,
+                                groupId: widget.groupId,
+                                groupName: widget.groupName,
                                 members: members,
                               ),
                             ),
@@ -576,10 +646,9 @@ class GroupPage extends StatelessWidget {
                         }),
 
                         _buildActionButton("Edit Friends", Icons.group_add, onTap: () async {
-                          // Fetch current group members
                           final groupDoc = await FirebaseFirestore.instance
                               .collection('groups')
-                              .doc(groupId)
+                              .doc(widget.groupId)
                               .get();
                           
                           if (groupDoc.exists) {
@@ -590,14 +659,13 @@ class GroupPage extends StatelessWidget {
                               email: member['email'],
                             )).toList();
 
-                            // Navigate to EditGroupPage
                             if (context.mounted) {
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => EditGroupPage(
-                                    groupId: groupId,
-                                    groupName: groupName,
+                                    groupId: widget.groupId,
+                                    groupName: widget.groupName,
                                     currentMembers: currentMembers,
                                   ),
                                 ),
@@ -607,9 +675,8 @@ class GroupPage extends StatelessWidget {
                         }),
                         
                         _buildActionButton("Settle Up", Icons.monetization_on, onTap: () {
-                          _showSettleUpDialog(context, groupId, members);
+                          _showSettleUpDialog(context, widget.groupId, members);
                         }),
-                        
                       ],
                     ),
                   ],
@@ -640,7 +707,7 @@ class GroupPage extends StatelessWidget {
                         child: StreamBuilder<QuerySnapshot>(
                           stream: FirebaseFirestore.instance
                               .collection('groups')
-                              .doc(groupId)
+                              .doc(widget.groupId)
                               .collection('bills')
                               .orderBy('date', descending: true)
                               .snapshots(),
@@ -684,23 +751,23 @@ class GroupPage extends StatelessWidget {
                             }
 
                             return ListView.builder(
-                              padding: EdgeInsets.only(top: 20),
+                              padding: const EdgeInsets.only(top: 20, bottom: 80),
                               itemCount: bills.length,
                               itemBuilder: (context, index) {
-                                final bill = bills[index].data() as Map<String, dynamic>;
+                                final bill = bills[index];
                                 final payer = members.firstWhere(
                                   (m) => m['id'] == bill['paidById'],
                                   orElse: () => {'name': 'Unknown'},
                                 );
 
                                 return BillListItem(
-                                  title: bill['name'] as String? ?? 'Unnamed Bill',
-                                  amount: (bill['amount'] as num?)?.toDouble() ?? 0.0,
-                                  paidBy: payer['name'] as String? ?? 'Unknown',
-                                  paidById: bill['paidById'] as String,
+                                  title: bill['name'] ?? '',
+                                  amount: (bill['amount'] as num).toDouble(),
+                                  paidBy: payer['name'] ?? '',
+                                  paidById: bill['paidById'] ?? '',
                                   date: (bill['date'] as Timestamp).toDate(),
                                   participants: List<Map<String, dynamic>>.from(bill['participants'] ?? []),
-                                  splitMethod: bill['splitMethod'] as String? ?? 'equal',
+                                  splitMethod: bill['splitMethod'] ?? 'equal',
                                 );
                               },
                             );
@@ -722,7 +789,7 @@ class GroupPage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => NewBillPage(
-                    groupId: groupId,
+                    groupId: widget.groupId,
                     groupMembers: members,
                   ),
                 ),

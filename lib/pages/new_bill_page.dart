@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:splitgasy/services/balance_service.dart';
-import 'package:splitgasy/services/notification_service.dart';
+import 'package:splizzy/services/balance_service.dart';
+import 'package:splizzy/services/notification_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 
 class NewBillPage extends StatefulWidget {
   final String groupId;
@@ -26,8 +28,9 @@ class _NewBillPageState extends State<NewBillPage> {
   String? _selectedPayer;
   String? _selectedSplitMethod = 'Equal';
   bool _isSubmitting = false;
-  Map<String, TextEditingController> _shareControllers = {};
-  Map<String, TextEditingController> _percentageControllers = {};
+  final Map<String, TextEditingController> _shareControllers = {};
+  final Map<String, TextEditingController> _percentageControllers = {};
+  final Map<String, TextEditingController> _customAmountControllers = {};
 
   // Split methods
   final List<String> _splitMethods = [
@@ -46,6 +49,7 @@ class _NewBillPageState extends State<NewBillPage> {
     for (var member in widget.groupMembers) {
       _shareControllers[member['id']] = TextEditingController();
       _percentageControllers[member['id']] = TextEditingController(text: '0');
+      _customAmountControllers[member['id']] = TextEditingController();
     }
   }
 
@@ -54,8 +58,15 @@ class _NewBillPageState extends State<NewBillPage> {
     _billNameController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
-    _shareControllers.values.forEach((controller) => controller.dispose());
-    _percentageControllers.values.forEach((controller) => controller.dispose());
+    for (var controller in _shareControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _percentageControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _customAmountControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -309,7 +320,7 @@ class _NewBillPageState extends State<NewBillPage> {
                                 Expanded(
                                   child: TextFormField(
                                     controller: _amountController,
-                                    keyboardType: TextInputType.number,
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                     textAlign: TextAlign.right,
                                     style: const TextStyle(
                                       color: Colors.white,
@@ -611,7 +622,7 @@ class _NewBillPageState extends State<NewBillPage> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         );
 
@@ -651,24 +662,45 @@ class _NewBillPageState extends State<NewBillPage> {
                     ),
                     SizedBox(
                       width: 120,
-                      child: TextField(
-                        controller: _shareControllers[member['id']],
-                        keyboardType: TextInputType.number,
+                      child: TextFormField(
+                        controller: _customAmountControllers[member['id']],
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
                         textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          color: Color(0xFF043E50),
-                          fontSize: 16,
-                        ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
+                          hintText: '0.00',
                           prefixText: '\$',
-                          contentPadding: EdgeInsets.zero,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Color(0xFF043E50)),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         ),
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF043E50),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _updateShares();
+                          });
+                        },
                       ),
                     ),
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         );
 

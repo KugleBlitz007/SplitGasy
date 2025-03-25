@@ -4,14 +4,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart'; // Import Provider
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:splitgasy/pages/auth_page.dart';
-import 'package:splitgasy/pages/onboarding_page.dart';
+import 'package:splizzy/pages/auth_page.dart';
+import 'package:splizzy/pages/onboarding_page.dart';
 import 'firebase_options.dart';
 
 // Import your providers
-import 'package:splitgasy/providers/group_provider.dart';
-import 'package:splitgasy/providers/user_provider.dart';
-import 'package:splitgasy/providers/bill_provider.dart';
+import 'package:splizzy/providers/group_provider.dart';
+import 'package:splizzy/providers/user_provider.dart';
+import 'package:splizzy/providers/bill_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:splitgasy/pages/login_page.dart';
+import 'package:splizzy/pages/login_page.dart';
 
 import 'signup_page.dart';
 
@@ -23,10 +23,17 @@ class _LoginOrSignupPageState extends State<LoginOrSignupPage> {
   
   @override
   Widget build(BuildContext context) {
-    if (showLoginPage) {
-      return LoginPage(onTap: togglePages);
-    } else {
-      return SignupPage(onTap: togglePages);
-    }
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
+      },
+      child: showLoginPage
+          ? LoginPage(key: const ValueKey('login'), onTap: togglePages)
+          : SignupPage(key: const ValueKey('signup'), onTap: togglePages),
+    );
   }
 }

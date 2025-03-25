@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:splitgasy/pages/auth_page.dart';
+import 'package:splizzy/pages/auth_page.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
