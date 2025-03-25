@@ -678,23 +678,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                           ListTile(
                             title: Text(
-                              "Search Friends",
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Color(0xFF043E50),
-                              ),
-                            ),
-                            leading: const Icon(Icons.search, color: Color(0xFF043E50)),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const SendInvitesPage()),
-                              );
-                            },
-                          ),
-                          ListTile(
-                            title: Text(
                               "Delete Account",
                               style: GoogleFonts.poppins(
                                 fontSize: 16,
@@ -870,7 +853,16 @@ class _HomePageState extends State<HomePage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildActionButton("New Bill", Icons.receipt),
+                    _buildActionButton(
+                      "Add Friends",
+                      Icons.person_add,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SendInvitesPage()),
+                        );
+                      },
+                    ),
                     _buildActionButton(
                       "Settle Up",
                       Icons.monetization_on,
@@ -887,7 +879,6 @@ class _HomePageState extends State<HomePage> {
                       Icons.request_page,
                       onTap: () => _showRequestDialog(context),
                     ),
-                    
                   ],
                 ),
               ],
