@@ -755,14 +755,26 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     
-                    IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white),
-                      //onPressed: () => signOut(context),
-                      onPressed:() { 
-                      _scaffoldKey.currentState?.openEndDrawer();
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('notifications')
+                          .where('userId', isEqualTo: user.uid)
+                          .where('isRead', isEqualTo: false)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        final hasUnread = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+                        return Badge(
+                          isLabelVisible: hasUnread,
+                          backgroundColor: Colors.red,
+                          child: IconButton(
+                            icon: const Icon(Icons.menu, color: Colors.white),
+                            onPressed: () {
+                              _scaffoldKey.currentState?.openEndDrawer();
+                            },
+                          ),
+                        );
                       },
                     ),
-                    
                   ],
                 ),
           
