@@ -25,6 +25,7 @@ class _AddFriendsPageState extends State<AddFriendsPage> {
   List<AppUser> selectedUsers = [];
   bool isLoading = true;
   final currentUser = FirebaseAuth.instance.currentUser;
+  Map<String, bool> isFriendMap = {};
 
   @override
   void initState() {
@@ -37,12 +38,13 @@ class _AddFriendsPageState extends State<AddFriendsPage> {
     try {
       if (currentUser == null) return;
 
+      // First, get all users
       final snapshot = await FirebaseFirestore.instance
           .collection('users')
           .get();
 
       final users = snapshot.docs
-          .where((doc) => doc.id != currentUser?.uid) // Add null check with ?.
+          .where((doc) => doc.id != currentUser?.uid)
           .map((doc) => AppUser(
                 id: doc.id,
                 name: doc['name'] ?? 'Unknown User',
@@ -50,10 +52,19 @@ class _AddFriendsPageState extends State<AddFriendsPage> {
               ))
           .toList();
 
-      // Filter out existing friends if provided
-      if (widget.existingFriends != null) {
-        users.removeWhere((user) => 
-          widget.existingFriends!.any((friend) => friend.id == user.id));
+      // Then, get the current user's friends
+      final friendsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .collection('friends')
+          .get();
+
+      // Create a map of friend IDs
+      final friendIds = friendsSnapshot.docs.map((doc) => doc.id).toSet();
+
+      // Update the isFriendMap for each user
+      for (var user in users) {
+        isFriendMap[user.id] = friendIds.contains(user.id);
       }
 
       setState(() {
@@ -306,6 +317,8 @@ class _AddFriendsPageState extends State<AddFriendsPage> {
                                     itemCount: searchResults.length,
                                     itemBuilder: (context, index) {
                                       final user = searchResults[index];
+                                      final isFriend = isFriendMap[user.id] ?? false;
+                                      
                                       return Container(
                                         margin: const EdgeInsets.only(bottom: 10),
                                         decoration: BoxDecoration(
@@ -329,13 +342,18 @@ class _AddFriendsPageState extends State<AddFriendsPage> {
                                                     fontSize: 14,
                                                   ),
                                                 ),
-                                                trailing: IconButton(
-                                                  icon: const Icon(
-                                                    Icons.person_add,
-                                                    color: Colors.white,
-                                                  ),
-                                                  onPressed: () => _sendInvitation(user),
-                                                ),
+                                                trailing: isFriend
+                                                    ? const Icon(
+                                                        Icons.check_circle,
+                                                        color: Colors.green,
+                                                      )
+                                                    : IconButton(
+                                                        icon: const Icon(
+                                                          Icons.person_add,
+                                                          color: Colors.white,
+                                                        ),
+                                                        onPressed: () => _sendInvitation(user),
+                                                      ),
                                               )
                                             : CheckboxListTile(
                                                 value: selectedUsers.contains(user),
