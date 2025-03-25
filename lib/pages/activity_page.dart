@@ -170,6 +170,7 @@ class _ActivityPageState extends State<ActivityPage> {
     String? fromUserEmail,
   ) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -269,6 +270,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
   Widget _buildFriendRequestAcceptedCard(String fromUserName) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -309,6 +311,7 @@ class _ActivityPageState extends State<ActivityPage> {
     String status,
   ) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -370,6 +373,7 @@ class _ActivityPageState extends State<ActivityPage> {
     bool isCreator,
   ) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -520,6 +524,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
   Widget _buildPaymentRequestCard(Map<String, dynamic> activity) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
