@@ -95,6 +95,9 @@ class _SearchPageState extends State<SearchPage> {
               // 🔹 Search Bar
               TextField(
                 controller: _searchController,
+                onTap: () {
+                  _searchController.clear();
+                },
                 onChanged: (value) => searchUsers(value),
                 style: const TextStyle(
                   color: Colors.white,
@@ -102,8 +105,8 @@ class _SearchPageState extends State<SearchPage> {
                   fontWeight: FontWeight.w500,
                 ),
                 decoration: InputDecoration(
-                  labelText: "Search for people...",
-                  labelStyle: TextStyle(
+                  hintText: 'Enter friend name',
+                  hintStyle: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
