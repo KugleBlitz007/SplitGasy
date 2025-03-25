@@ -557,7 +557,7 @@ class _GroupPageState extends State<GroupPage> {
                                             ),
                                           ),
                                           AnimatedRotation(
-                                            duration: const Duration(milliseconds: 300),
+                                            duration: const Duration(milliseconds: 150),
                                             turns: _showIndividualBalances ? 0.5 : 0,
                                             child: Icon(
                                               Icons.keyboard_arrow_down,

@@ -77,9 +77,24 @@ class _NewBillPageState extends State<NewBillPage> {
     
     switch (_selectedSplitMethod) {
       case 'Equal':
-        final equalShare = (totalAmount / widget.groupMembers.length).toStringAsFixed(2);
-        for (var member in widget.groupMembers) {
+        final int numMembers = widget.groupMembers.length;
+        final equalShare = (totalAmount / numMembers).toStringAsFixed(2);
+        final double equalShareValue = double.parse(equalShare);
+        
+        // Calculate how much we might be off due to rounding
+        final double roundingDifference = totalAmount - (equalShareValue * numMembers);
+        
+        // Assign equal shares to all members except the last one
+        for (int i = 0; i < numMembers - 1; i++) {
+          final member = widget.groupMembers[i];
           _shareControllers[member['id']]?.text = equalShare;
+        }
+        
+        // Adjust the last member's share to make the total exact
+        if (numMembers > 0) {
+          final lastMember = widget.groupMembers[numMembers - 1];
+          final lastShare = (equalShareValue + roundingDifference).toStringAsFixed(2);
+          _shareControllers[lastMember['id']]?.text = lastShare;
         }
         break;
         
@@ -486,9 +501,11 @@ class _NewBillPageState extends State<NewBillPage> {
 
     switch (_selectedSplitMethod) {
       case 'Equal':
-        final equalShare = totalAmount / widget.groupMembers.length;
         return Column(
           children: widget.groupMembers.map((member) {
+            // Use the value from the share controller
+            final shareValue = _shareControllers[member['id']]?.text ?? '0.00';
+            
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
@@ -508,7 +525,7 @@ class _NewBillPageState extends State<NewBillPage> {
                     ),
                   ),
                   Text(
-                    '\$${equalShare.toStringAsFixed(2)}',
+                    '\$$shareValue',
                     style: const TextStyle(
                       color: Color(0xFF043E50),
                       fontSize: 16,
