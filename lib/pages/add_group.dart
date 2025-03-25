@@ -181,27 +181,13 @@ class _AddGroupPageState extends State<AddGroupPage> {
   }
 
   // Called when the "Add friends" icon is tapped
-  void _addFriend() async {
-    final List<AppUser>? newSelectedUsers = await Navigator.push(
+  void _addFriend() {
+    Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddFriendsPage(
-          showInviteButton: false,
-          existingFriends: friends,
-        ),
+        builder: (context) => const AddFriendsPage(),
       ),
     );
-
-    if (newSelectedUsers != null) {
-      setState(() {
-        for (var user in newSelectedUsers) {
-          if (!friends.any((friend) => friend.id == user.id)) {
-            friends.add(user);
-            selectedFriendIds.add(user.id);
-          }
-        }
-      });
-    }
   }
 
   @override
