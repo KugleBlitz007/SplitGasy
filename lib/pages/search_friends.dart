@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:splitgasy/Models/app_user.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SearchPage extends StatefulWidget {
   final List<AppUser> existingFriends;
@@ -14,36 +15,65 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
+  List<AppUser> allUsers = [];
   List<AppUser> searchResults = [];
   List<AppUser> selectedUsers = [];
+  bool isLoading = true;
 
-  // 🔹 Search Users from Firestore
-  Future<void> searchUsers(String query) async {
+  @override
+  void initState() {
+    super.initState();
+    _loadAllUsers();
+  }
+
+  // Load all users from Firestore
+  Future<void> _loadAllUsers() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .get();
+
+      final users = snapshot.docs
+          .where((doc) => doc.id != currentUser.uid) // Exclude current user
+          .map((doc) => AppUser(
+                id: doc.id,
+                name: doc['name'] ?? 'Unknown User',
+                email: doc['email'] ?? '',
+              ))
+          .toList();
+
+      setState(() {
+        allUsers = users;
+        searchResults = users;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading users: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Search Users
+  void searchUsers(String query) {
     if (query.isEmpty) {
       setState(() {
-        searchResults = [];
+        searchResults = allUsers;
       });
       return;
     }
 
-    // Convert search query to lowercase
     String lowerQuery = query.toLowerCase();
-
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .get();
-
-    List<AppUser> filteredUsers = snapshot.docs
-      .where((doc) => doc['name'].toString().toLowerCase().contains(lowerQuery))
-      .map((doc) => AppUser(
-            id: doc.id,
-            name: doc['name'],
-            email: doc['email'],
-          ))
-      .toList();
-
     setState(() {
-      searchResults = filteredUsers;
+      searchResults = allUsers
+          .where((user) => 
+              user.name.toLowerCase().contains(lowerQuery) ||
+              user.email.toLowerCase().contains(lowerQuery))
+          .toList();
     });
   }
 
@@ -84,7 +114,7 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    "Search Friends",
+                    "Select Friends",
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: 22,
@@ -115,14 +145,14 @@ class _SearchPageState extends State<SearchPage> {
                         onTap: () {
                           _searchController.clear();
                         },
-                        onChanged: (value) => searchUsers(value),
+                        onChanged: searchUsers,
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Enter friend name',
+                          hintText: 'Search friends',
                           hintStyle: GoogleFonts.poppins(
                             color: Colors.grey.shade400,
                             fontSize: 16,
@@ -148,53 +178,55 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Search Results
+                      // Results List
                       Expanded(
-                        child: searchResults.isEmpty
-                            ? Center(
-                                child: Text(
-                                  "No users found",
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.grey.shade400,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              )
-                            : ListView.builder(
-                                itemCount: searchResults.length,
-                                itemBuilder: (context, index) {
-                                  final user = searchResults[index];
-                                  return CheckboxListTile(
-                                    title: Text(
-                                      user.name,
+                        child: isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : searchResults.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      "No users found",
                                       style: GoogleFonts.poppins(
-                                        color: Colors.white,
-                                        fontSize: 14,
+                                        color: Colors.grey.shade400,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    subtitle: Text(
-                                      user.email,
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.grey.shade400,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    value: selectedUsers.contains(user),
-                                    onChanged: (selected) {
-                                      toggleUserSelection(user);
+                                  )
+                                : ListView.builder(
+                                    itemCount: searchResults.length,
+                                    itemBuilder: (context, index) {
+                                      final user = searchResults[index];
+                                      return CheckboxListTile(
+                                        title: Text(
+                                          user.name,
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          user.email,
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.grey.shade400,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        value: selectedUsers.contains(user),
+                                        onChanged: (selected) {
+                                          toggleUserSelection(user);
+                                        },
+                                        activeColor: const Color(0xFF043E50),
+                                        checkColor: Colors.white,
+                                        tileColor: Colors.black26,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        side: const BorderSide(color: Colors.white, width: 2),
+                                      );
                                     },
-                                    activeColor: const Color(0xFF043E50),
-                                    checkColor: Colors.white,
-                                    tileColor: Colors.black26,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    side: const BorderSide(color: Colors.white, width: 2),
-                                  );
-                                },
-                              ),
+                                  ),
                       ),
                     ],
                   ),
