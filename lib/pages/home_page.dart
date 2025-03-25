@@ -722,7 +722,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           // Top part
           Container(
-            padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 30),
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 70, bottom: 20),
             decoration: const BoxDecoration(
               color: Color(0xFF043E50), // Dark green color
             ),
@@ -780,95 +780,61 @@ class _HomePageState extends State<HomePage> {
           
                 const SizedBox(height: 15),
           
-                // Available Balance
-                Row(
-                  children: [
-                    // Left column (Texts: "You Owe" & "You Are Owed")
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end, // Align to bottom
-                        children: [
-                          Text(
-                            "You Owe",
-                            style: GoogleFonts.poppins(
-                              color: Colors.white54,
-                              fontSize: 17,
-                            ),
-                          ),
-                          SizedBox(height: 22), // Space between the two texts
-                          Text(
-                            "You Are Owed",
-                            style: GoogleFonts.poppins(
-                              color: Colors.white54,
-                              fontSize: 17,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-          
-                    // Right column (Balances)
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('balances')
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        double youOwe = 0.0;
-                        double youAreOwed = 0.0;
+                // Combined Balance Display with Dropdown
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('balances')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    double youOwe = 0.0;
+                    double youAreOwed = 0.0;
 
-                        if (snapshot.hasData) {
-                          for (var doc in snapshot.data!.docs) {
-                            final data = doc.data() as Map<String, dynamic>;
-                            final status = data['status'] as String?;
-                            
-                            // Skip settled balances
-                            if (status == 'settled') continue;
-                            
-                            final amount = (data['amount'] as num).toDouble();
-                            final fromUserId = data['fromUserId'] as String;
-                            final toUserId = data['toUserId'] as String;
+                    if (snapshot.hasData) {
+                      for (var doc in snapshot.data!.docs) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final status = data['status'] as String?;
+                        
+                        // Skip settled balances
+                        if (status == 'settled') continue;
+                        
+                        final amount = (data['amount'] as num).toDouble();
+                        final fromUserId = data['fromUserId'] as String;
+                        final toUserId = data['toUserId'] as String;
 
-                            if (fromUserId == user.uid) {
-                              // Current user owes money
-                              youOwe += amount;
-                            } else if (toUserId == user.uid) {
-                              // Current user is owed money
-                              youAreOwed += amount;
-                            }
-                          }
+                        if (fromUserId == user.uid) {
+                          // Current user owes money
+                          youOwe += amount;
+                        } else if (toUserId == user.uid) {
+                          // Current user is owed money
+                          youAreOwed += amount;
                         }
+                      }
+                    }
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment: MainAxisAlignment.end, // Align to bottom
-                          children: [
-                            Text(
-                              "\$${youOwe.toStringAsFixed(2)}", // You owe amount
-                              style: GoogleFonts.poppins(
-                                color: const Color(0xFFFFC2C2),
-                                fontSize: 25,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              "\$${youAreOwed.toStringAsFixed(2)}", // You are owed amount
-                              style: GoogleFonts.poppins(
-                                color: const Color(0xFFC1FFE1),
-                                fontSize: 25,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                    // Calculate overall balance
+                    double overallBalance = youAreOwed - youOwe;
+                    String balanceText = overallBalance >= 0 
+                      ? "+\$${overallBalance.toStringAsFixed(2)}" 
+                      : "-\$${overallBalance.abs().toStringAsFixed(2)}";
+                    Color balanceColor = overallBalance >= 0 
+                      ? const Color(0xFFC1FFE1) 
+                      : const Color(0xFFFFC2C2);
+                    String balanceLabel = overallBalance >= 0 
+                      ? "Overall, you are owed" 
+                      : "Overall, you owe";
+
+                    return _ExpandableBalanceWidget(
+                      youOwe: youOwe,
+                      youAreOwed: youAreOwed,
+                      overallBalance: overallBalance,
+                      balanceLabel: balanceLabel,
+                      balanceText: balanceText,
+                      balanceColor: balanceColor,
+                    );
+                  },
                 ),
           
-          
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
           
                 // Action Buttons (Send, Fund Wallet, Request, Pay Bills)
                 Row(
@@ -904,7 +870,7 @@ class _HomePageState extends State<HomePage> {
           // Bottom part
           Expanded(
             child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -1084,6 +1050,136 @@ class _HomePageState extends State<HomePage> {
         ),
       ],
       )
+    );
+  }
+}
+
+class _ExpandableBalanceWidget extends StatefulWidget {
+  final double youOwe;
+  final double youAreOwed;
+  final double overallBalance;
+  final String balanceLabel;
+  final String balanceText;
+  final Color balanceColor;
+
+  const _ExpandableBalanceWidget({
+    required this.youOwe,
+    required this.youAreOwed,
+    required this.overallBalance,
+    required this.balanceLabel,
+    required this.balanceText,
+    required this.balanceColor,
+  });
+
+  @override
+  State<_ExpandableBalanceWidget> createState() => _ExpandableBalanceWidgetState();
+}
+
+class _ExpandableBalanceWidgetState extends State<_ExpandableBalanceWidget> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _expanded = !_expanded;
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.balanceLabel,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.balanceText,
+                      style: GoogleFonts.poppins(
+                        color: widget.balanceColor,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Icon(
+                  _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  color: Colors.white70,
+                  size: 28,
+                ),
+              ],
+            ),
+            
+            // Expandable details section
+            if (_expanded) ...[
+              const SizedBox(height: 16),
+              const Divider(height: 1, color: Colors.white24),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "You owe",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white54,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    "\$${widget.youOwe.toStringAsFixed(2)}",
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFFFFC2C2),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "You are owed",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white54,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    "\$${widget.youAreOwed.toStringAsFixed(2)}",
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFFC1FFE1),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
