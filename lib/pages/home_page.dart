@@ -6,14 +6,9 @@ import 'package:splitgasy/components/group_list_item.dart';
 import 'package:splitgasy/pages/add_group.dart';
 import 'package:splitgasy/pages/login_or_signup_page.dart';
 import 'package:splitgasy/pages/activity_page.dart';
-import 'package:splitgasy/pages/search_friends.dart';
 import 'package:splitgasy/pages/add_friends.dart';
 import 'package:splitgasy/services/balance_service.dart';
 import 'package:splitgasy/services/notification_service.dart';
-import 'package:splitgasy/Models/app_user.dart';
-import 'package:splitgasy/Models/group.dart';
-import 'package:splitgasy/Models/balance.dart';
-import 'package:splitgasy/pages/group_page.dart';
 
 
 class HomePage extends StatefulWidget {

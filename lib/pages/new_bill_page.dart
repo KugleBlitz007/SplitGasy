@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:splitgasy/services/balance_service.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class NewBillPage extends StatefulWidget {
   final String groupId;
