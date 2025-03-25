@@ -13,6 +13,12 @@ import 'package:splitgasy/providers/bill_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
   try {
     await dotenv.load();  // Load .env
   } catch (e) {
