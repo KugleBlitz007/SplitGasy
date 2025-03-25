@@ -95,7 +95,28 @@ class _AddGroupPageState extends State<AddGroupPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading friends: $e')),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'Error loading friends: $e',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
         );
       }
     }
@@ -124,7 +145,28 @@ class _AddGroupPageState extends State<AddGroupPage> {
 
     if (groupName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Group name cannot be empty')),
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                'Group name cannot be empty',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
       return;
     }
@@ -135,7 +177,28 @@ class _AddGroupPageState extends State<AddGroupPage> {
 
     if (selectedFriends.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one friend')),
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                'Please select at least one friend',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
       return;
     }
@@ -170,13 +233,55 @@ class _AddGroupPageState extends State<AddGroupPage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Group created successfully!')),
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                'Group created successfully!',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF043E50),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
 
       Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating group: $e')),
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                'Error creating group: $e',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     }
   }
