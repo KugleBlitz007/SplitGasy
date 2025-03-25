@@ -111,7 +111,7 @@ class _BillListItemState extends State<BillListItem> {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

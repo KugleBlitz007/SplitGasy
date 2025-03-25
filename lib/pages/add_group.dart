@@ -160,7 +160,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
               ),
             ],
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: const Color(0xFF043E50),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
           shape: RoundedRectangleBorder(
@@ -192,7 +192,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
               ),
             ],
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: const Color(0xFF043E50),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
           shape: RoundedRectangleBorder(
