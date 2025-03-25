@@ -78,12 +78,11 @@ class _NewBillPageState extends State<NewBillPage> {
           totalPercentage += double.tryParse(controller.text) ?? 0;
         }
         
-        if (totalPercentage > 0) {
-          for (var member in widget.groupMembers) {
-            final percentage = double.tryParse(_percentageControllers[member['id']]?.text ?? '0') ?? 0;
-            final share = (totalAmount * percentage / 100).toStringAsFixed(2);
-            _shareControllers[member['id']]?.text = share;
-          }
+        // Update shares based on percentages
+        for (var member in widget.groupMembers) {
+          final percentage = double.tryParse(_percentageControllers[member['id']]?.text ?? '0') ?? 0;
+          final share = (totalAmount * percentage / 100).toStringAsFixed(2);
+          _shareControllers[member['id']]?.text = share;
         }
         break;
         
@@ -91,6 +90,19 @@ class _NewBillPageState extends State<NewBillPage> {
         // Custom shares are managed directly through share controllers
         break;
     }
+  }
+
+  void _initializeProportionalSplit() {
+    // Calculate equal percentage for each member
+    final equalPercentage = (100.0 / widget.groupMembers.length).toStringAsFixed(1);
+    
+    // Set the percentage for each member
+    for (var member in widget.groupMembers) {
+      _percentageControllers[member['id']]?.text = equalPercentage;
+    }
+    
+    // Update the shares
+    _updateShares();
   }
 
   Future<void> _submitBill() async {
@@ -238,7 +250,7 @@ class _NewBillPageState extends State<NewBillPage> {
                         ],
                       ),
 
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 10),
 
                       // Amount Field
                       Row(
@@ -381,6 +393,9 @@ class _NewBillPageState extends State<NewBillPage> {
                           onChanged: (value) {
                             setState(() {
                               _selectedSplitMethod = value;
+                              if (value == 'Proportional') {
+                                _initializeProportionalSplit();
+                              }
                               _updateShares();
                             });
                           },
@@ -390,6 +405,7 @@ class _NewBillPageState extends State<NewBillPage> {
                   ),
                 ),
 
+                const SizedBox(height: 10),
                 // Split Method Content
                 Expanded(
                   child: Container(
@@ -468,17 +484,46 @@ class _NewBillPageState extends State<NewBillPage> {
         );
 
       case 'Proportional':
+        // Calculate total percentage
+        double totalPercentage = 0;
+        for (var controller in _percentageControllers.values) {
+          totalPercentage += double.tryParse(controller.text) ?? 0;
+        }
+        
         return Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 20),
-              child: Text(
-                'Set percentage for each person',
-                style: TextStyle(
-                  color: Color(0xFF043E50),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Column(
+                children: [
+                  const Text(
+                    'Set percentage for each person',
+                    style: TextStyle(
+                      color: Color(0xFF043E50),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: (totalPercentage - 100).abs() < 0.01
+                          ? const Color(0xFFDCFCE7).withOpacity(0.5)
+                          : const Color(0xFFFEE2E2).withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Total: ${totalPercentage.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        color: (totalPercentage - 100).abs() < 0.01
+                            ? const Color(0xFF059669)
+                            : const Color(0xFFDC2626),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             ...widget.groupMembers.map((member) {
@@ -516,7 +561,11 @@ class _NewBillPageState extends State<NewBillPage> {
                           suffix: Text('%'),
                           contentPadding: EdgeInsets.zero,
                         ),
-                        onChanged: (value) => _updateShares(),
+                        onChanged: (value) {
+                          setState(() {
+                            _updateShares();
+                          });
+                        },
                       ),
                     ),
                     const SizedBox(width: 20),

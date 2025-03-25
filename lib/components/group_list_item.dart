@@ -45,13 +45,40 @@ class GroupListItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(
-                  groupName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF043E50),
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      groupName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF043E50),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.group,
+                          size: 16,
+                          color: const Color(0xFF6B7280),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            _getFormattedMembersString(),
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: const Color(0xFF6B7280),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               if (balance != 0)
@@ -59,46 +86,36 @@ class GroupListItem extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: balance >= 0 
-                      ? const Color(0xFFC1FFE1).withOpacity(0.2)
-                      : const Color(0xFFFFC2C2).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
+                      ? const Color(0xFFDCFCE7).withOpacity(0.5)
+                      : const Color(0xFFFEE2E2).withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(
-                    balance >= 0 
-                      ? "You are owed \$${balance.abs().toStringAsFixed(2)}"
-                      : "You owe \$${balance.abs().toStringAsFixed(2)}",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: balance >= 0 
-                        ? const Color(0xFF043E50)
-                        : const Color(0xFF043E50),
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        balance >= 0 ? Icons.arrow_downward : Icons.arrow_upward,
+                        size: 16,
+                        color: balance >= 0 
+                          ? const Color(0xFF059669)
+                          : const Color(0xFFDC2626),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        balance >= 0 
+                          ? "You are owed \$${balance.abs().toStringAsFixed(2)}"
+                          : "You owe \$${balance.abs().toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: balance >= 0 
+                            ? const Color(0xFF059669)
+                            : const Color(0xFFDC2626),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Members list
-          Row(
-            children: [
-              Icon(
-                Icons.group,
-                size: 16,
-                color: Colors.grey[600],
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  _getFormattedMembersString(),
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
             ],
           ),
         ],
@@ -135,129 +152,206 @@ class GroupListItem extends StatelessWidget {
           }
         }
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 2,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => GroupPage(
-                      groupName: groupName,
-                      groupId: groupId,
+        return GestureDetector(
+          onLongPress: () {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text(
+                    "Group Options",
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
                     ),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.edit, color: Color(0xFF043E50)),
+                        title: Text(
+                          "Rename Group",
+                          style: GoogleFonts.poppins(),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // Show rename dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              final TextEditingController controller = TextEditingController(text: groupName);
+                              return AlertDialog(
+                                title: Text(
+                                  "Rename Group",
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                content: TextField(
+                                  controller: controller,
+                                  autofocus: true,
+                                  decoration: InputDecoration(
+                                    hintText: "Enter new group name",
+                                    hintStyle: GoogleFonts.poppins(),
+                                  ),
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      "Cancel",
+                                      style: GoogleFonts.poppins(
+                                        color: const Color(0xFF043E50),
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      final newName = controller.text.trim();
+                                      if (newName.isNotEmpty) {
+                                        await FirebaseFirestore.instance
+                                            .collection('groups')
+                                            .doc(groupId)
+                                            .update({'name': newName});
+                                      }
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      "Rename",
+                                      style: GoogleFonts.poppins(
+                                        color: const Color(0xFF043E50),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.delete, color: Colors.red),
+                        title: Text(
+                          "Delete Group",
+                          style: GoogleFonts.poppins(),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // Show delete confirmation dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text(
+                                  "Delete Group",
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                content: Text(
+                                  "Are you sure you want to delete this group?",
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () async {
+                                      // Delete all balances associated with the group
+                                      final balancesSnapshot = await FirebaseFirestore.instance
+                                          .collection('balances')
+                                          .where('groupId', isEqualTo: groupId)
+                                          .get();
+                                      
+                                      // Create a batch operation for efficient deletion
+                                      final batch = FirebaseFirestore.instance.batch();
+                                      
+                                      // Add balance deletions to batch
+                                      for (var doc in balancesSnapshot.docs) {
+                                        batch.delete(doc.reference);
+                                      }
+                                      
+                                      // Add group deletion to batch
+                                      batch.delete(FirebaseFirestore.instance
+                                          .collection('groups')
+                                          .doc(groupId));
+                                      
+                                      // Execute all deletions in a single atomic operation
+                                      await batch.commit();
+                                      
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      "Delete",
+                                      style: GoogleFonts.poppins(color: Colors.red),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      "Cancel",
+                                      style: GoogleFonts.poppins(
+                                        color: const Color(0xFF043E50),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 );
               },
-              onLongPress: () {
-                // Show a dialog with edit and delete options
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text("Select Action", style: GoogleFonts.poppins()),
-                      content: Text("Would you like to rename or delete this group?", style: GoogleFonts.poppins()),
-                      actions: [
-                        //rename group action
-                        TextButton(
-                          onPressed: () { 
-                            // Close the first dialog.
-                            Navigator.pop(context);
-                            // Then show a second dialog to rename.
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                // Create a controller pre-filled with the current group name.
-                                final TextEditingController renameController = TextEditingController(text: groupName);
-                                return AlertDialog(
-                                  title: Text("Rename Group", style: GoogleFonts.poppins()),
-                                  content: TextField(
-                                    controller: renameController,
-                                    style: GoogleFonts.poppins(),
-                                    decoration: InputDecoration(
-                                      labelText: "New Group Name",
-                                      labelStyle: GoogleFonts.poppins(),
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () async {
-                                        final newName = renameController.text.trim();
-                                        if (newName.isNotEmpty) {
-                                          await FirebaseFirestore.instance
-                                              .collection('groups')
-                                              .doc(groupId)
-                                              .update({'name': newName});
-                                        }
-                                        Navigator.pop(context); // Close rename dialog.
-                                      },
-                                      child: Text("Rename", style: GoogleFonts.poppins(color: const Color(0xFF043E50))),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context); // Cancel rename.
-                                      },
-                                      child: Text("Cancel", style: GoogleFonts.poppins(color: const Color(0xFF043E50))),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                          child: Text("Rename", style: GoogleFonts.poppins(color: Color(0xFF043E50))),
+            );
+          },
+          child: Card(
+            margin: const EdgeInsets.only(bottom: 15),
+            elevation: 0,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: Colors.grey.shade200,
+                width: 1,
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF043E50).withOpacity(0.04),
+                    offset: const Offset(0, 4),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GroupPage(
+                          groupId: groupId,
+                          groupName: groupName,
                         ),
-
-                        //delete group action
-                        TextButton(
-                          onPressed: () async {
-                            // Delete all balances associated with the group
-                            final balancesSnapshot = await FirebaseFirestore.instance
-                                .collection('balances')
-                                .where('groupId', isEqualTo: groupId)
-                                .get();
-                            
-                            // Create a batch operation for efficient deletion
-                            final batch = FirebaseFirestore.instance.batch();
-                            
-                            // Add balance deletions to batch
-                            for (var doc in balancesSnapshot.docs) {
-                              batch.delete(doc.reference);
-                            }
-                            
-                            // Add group deletion to batch
-                            batch.delete(FirebaseFirestore.instance
-                                .collection('groups')
-                                .doc(groupId));
-                            
-                            // Execute all deletions in a single atomic operation
-                            await batch.commit();
-                            
-                            Navigator.pop(context);
-                          },
-                          child: Text("Delete", style: GoogleFonts.poppins(color: Colors.red)),
-                        ),
-
-                        //cancel 
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text("Cancel", style: GoogleFonts.poppins(color: Color(0xFF043E50))),
-                        ),
-                      ],
+                      ),
                     );
                   },
-                );
-              },
-              child: _buildListTile(context, groupBalance),
+                  borderRadius: BorderRadius.circular(10),
+                  child: _buildListTile(context, groupBalance),
+                ),
+              ),
             ),
           ),
         );
