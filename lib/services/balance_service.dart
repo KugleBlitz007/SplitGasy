@@ -80,6 +80,12 @@ class BalanceService {
         'toUserId': toUserId,
         'settledAt': FieldValue.serverTimestamp(),
       });
+      
+      // Update the group's updatedAt field
+      final groupRef = FirebaseFirestore.instance.collection('groups').doc(groupId);
+      batch.update(groupRef, {
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
 
       // Commit the batch
       await batch.commit();

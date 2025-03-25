@@ -175,6 +175,14 @@ class _NewBillPageState extends State<NewBillPage> {
         _selectedPayer!,
         participants,
       );
+      
+      // Update the group's updatedAt field
+      await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .update({
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       if (mounted) {
         Navigator.pop(context, true);
