@@ -81,41 +81,52 @@ class GroupListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              if (balance != 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: balance >= 0 
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: balance == 0
                       ? const Color(0xFFDCFCE7).withOpacity(0.5)
-                      : const Color(0xFFFEE2E2).withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        balance >= 0 ? Icons.arrow_downward : Icons.arrow_upward,
-                        size: 16,
-                        color: balance >= 0 
-                          ? const Color(0xFF059669)
-                          : const Color(0xFFDC2626),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        balance >= 0 
-                          ? "You are owed \$${balance.abs().toStringAsFixed(2)}"
-                          : "You owe \$${balance.abs().toStringAsFixed(2)}",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: balance >= 0 
-                            ? const Color(0xFF059669)
-                            : const Color(0xFFDC2626),
-                        ),
-                      ),
-                    ],
-                  ),
+                      : balance > 0 
+                          ? const Color(0xFFDCFCE7).withOpacity(0.5)
+                          : const Color(0xFFFEE2E2).withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(6),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      balance == 0
+                          ? Icons.check_circle
+                          : balance > 0 
+                              ? Icons.arrow_downward 
+                              : Icons.arrow_upward,
+                      size: 16,
+                      color: balance == 0
+                          ? const Color(0xFF059669)
+                          : balance > 0 
+                              ? const Color(0xFF059669)
+                              : const Color(0xFFDC2626),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      balance == 0
+                          ? "All settled up!"
+                          : balance > 0 
+                              ? "You are owed \$${balance.abs().toStringAsFixed(2)}"
+                              : "You owe \$${balance.abs().toStringAsFixed(2)}",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: balance == 0
+                            ? const Color(0xFF059669)
+                            : balance > 0 
+                                ? const Color(0xFF059669)
+                                : const Color(0xFFDC2626),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
