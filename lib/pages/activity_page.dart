@@ -36,6 +36,7 @@ class _ActivityPageState extends State<ActivityPage> {
     String invitationId,
     String fromUserId,
     String fromUserName,
+    String fromUserEmail,
     bool accept,
   ) async {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -87,6 +88,7 @@ class _ActivityPageState extends State<ActivityPage> {
         batch.set(currentUserFriendsRef, {
           'id': fromUserId,
           'name': fromUserName,
+          'email': fromUserEmail,
           'addedAt': FieldValue.serverTimestamp(),
         });
 
@@ -165,6 +167,7 @@ class _ActivityPageState extends State<ActivityPage> {
     String status,
     String? invitationId,
     String? fromUserId,
+    String? fromUserEmail,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -212,6 +215,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       invitationId,
                       fromUserId,
                       fromUserName,
+                      fromUserEmail ?? '',
                       false,
                     ),
                     child: Text(
@@ -228,6 +232,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       invitationId,
                       fromUserId,
                       fromUserName,
+                      fromUserEmail ?? '',
                       true,
                     ),
                     style: ElevatedButton.styleFrom(
@@ -685,6 +690,7 @@ class _ActivityPageState extends State<ActivityPage> {
                             activity['status'] ?? 'pending',
                             activity['id'],
                             activity['fromUserId'] as String?,
+                            activity['fromUserEmail'] as String?,
                           );
                         case 'friend_request_accepted':
                           return _buildFriendRequestAcceptedCard(

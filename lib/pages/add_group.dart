@@ -59,14 +59,37 @@ class _AddGroupPageState extends State<AddGroupPage> {
           .collection('friends')
           .get();
 
-      setState(() {
-        for (var doc in friendsSnapshot.docs) {
-          friends.add(AppUser(
-            id: doc.data()['id'],
-            name: doc.data()['name'],
-            email: doc.data()['email'] ?? '',
+      // Load complete user data for each friend
+      final List<AppUser> loadedFriends = [];
+      for (var doc in friendsSnapshot.docs) {
+        final friendData = doc.data();
+        final friendId = friendData['id'];
+        
+        // Get complete user data from users collection
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(friendId)
+            .get();
+            
+        if (userDoc.exists) {
+          final userData = userDoc.data()!;
+          loadedFriends.add(AppUser(
+            id: friendId,
+            name: userData['name'] ?? friendData['name'],
+            email: userData['email'] ?? friendData['email'] ?? '',
+          ));
+        } else {
+          // Fallback to friend data if user document doesn't exist
+          loadedFriends.add(AppUser(
+            id: friendId,
+            name: friendData['name'],
+            email: friendData['email'] ?? '',
           ));
         }
+      }
+
+      setState(() {
+        friends.addAll(loadedFriends);
       });
     } catch (e) {
       if (mounted) {
