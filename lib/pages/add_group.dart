@@ -165,6 +165,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
         'name': groupName,
         'members': allMembers.map((f) => f.toMap()..addAll({'id': f.id})).toList(),
         'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
         'createdBy': currentUser!.uid,
       });
 

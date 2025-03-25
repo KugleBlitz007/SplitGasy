@@ -958,7 +958,32 @@ class _HomePageState extends State<HomePage> {
                         if (!snapshot.hasData) {
                           return const Center(child: CircularProgressIndicator());
                         }
-                        final docs = snapshot.data!.docs;
+                        
+                        // Get and sort docs by last modified date
+                        final docs = snapshot.data!.docs.toList();
+                        docs.sort((a, b) {
+                          final aData = a.data() as Map<String, dynamic>;
+                          final bData = b.data() as Map<String, dynamic>;
+                          
+                          // Get last modified timestamp - use updatedAt if available, otherwise createdAt
+                          // If both are null, use epoch timestamp (Jan 1, 1970)
+                          final aUpdated = aData['updatedAt'] as Timestamp?;
+                          final aCreated = aData['createdAt'] as Timestamp?;
+                          final bUpdated = bData['updatedAt'] as Timestamp?;
+                          final bCreated = bData['createdAt'] as Timestamp?;
+                          
+                          // Use the most recent of either timestamp
+                          final aTimestamp = aUpdated ?? aCreated;
+                          final bTimestamp = bUpdated ?? bCreated;
+                          
+                          if (aTimestamp == null && bTimestamp == null) return 0;
+                          if (aTimestamp == null) return 1; // null timestamps at the end
+                          if (bTimestamp == null) return -1;
+                          
+                          // Sort in descending order (newest first)
+                          return bTimestamp.compareTo(aTimestamp);
+                        });
+                        
                         if (docs.isEmpty) {
                           return Center(
                             child: Column(
