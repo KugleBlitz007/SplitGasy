@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:splitgasy/Models/app_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'search_friends.dart';
+import 'package:splitgasy/pages/add_friends.dart';
+
 
 class AddGroupPage extends StatefulWidget {
   const AddGroupPage({super.key});
@@ -100,24 +101,6 @@ class _AddGroupPageState extends State<AddGroupPage> {
     }
   }
 
-  // Navigate to SearchPage and Get Selected Users
-  Future<void> openSearchPage() async {
-    final List<AppUser>? selectedUsers = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SearchPage(existingFriends: friends)),
-    );
-
-    if (selectedUsers != null && selectedUsers.isNotEmpty) {
-      setState(() {
-        for (var user in selectedUsers) {
-          if (!friends.any((friend) => friend.id == user.id)) {
-            friends.add(user);
-          }
-        }
-      });
-    }
-  }
-
   @override
   void dispose() {
     _groupNameController.dispose();
@@ -199,18 +182,22 @@ class _AddGroupPageState extends State<AddGroupPage> {
 
   // Called when the "Add friends" icon is tapped
   void _addFriend() async {
-    final List<AppUser>? selectedUsers = await Navigator.push(
+    final List<AppUser>? newSelectedUsers = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SearchPage(existingFriends: friends),
+        builder: (context) => AddFriendsPage(
+          showInviteButton: false,
+          existingFriends: friends,
+        ),
       ),
     );
 
-    if (selectedUsers != null && selectedUsers.isNotEmpty) {
+    if (newSelectedUsers != null) {
       setState(() {
-        for (var user in selectedUsers) {
+        for (var user in newSelectedUsers) {
           if (!friends.any((friend) => friend.id == user.id)) {
             friends.add(user);
+            selectedFriendIds.add(user.id);
           }
         }
       });

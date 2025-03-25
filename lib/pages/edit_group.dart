@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:splitgasy/Models/app_user.dart';
-import 'search_friends.dart';
+import 'package:splitgasy/pages/add_friends.dart';
+
 
 class EditGroupPage extends StatefulWidget {
   final String groupId;
@@ -32,16 +33,26 @@ class _EditGroupPageState extends State<EditGroupPage> {
     friends.addAll(widget.currentMembers);
   }
 
-  // Navigate to SearchPage and Get Selected Users
-  Future<void> openSearchPage() async {
-    final List<AppUser>? selectedUsers = await Navigator.push(
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  // Called when the "Add friends" icon is tapped
+  void _addFriend() async {
+    final List<AppUser>? newSelectedUsers = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SearchPage(existingFriends: friends)),
+      MaterialPageRoute(
+        builder: (context) => AddFriendsPage(
+          showInviteButton: false,
+          existingFriends: friends,
+        ),
+      ),
     );
 
-    if (selectedUsers != null && selectedUsers.isNotEmpty) {
+    if (newSelectedUsers != null) {
       setState(() {
-        for (var user in selectedUsers) {
+        for (var user in newSelectedUsers) {
           if (!friends.any((friend) => friend.id == user.id)) {
             friends.add(user);
           }
@@ -50,13 +61,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  // Updates the group members in Firestore
-  Future<void> _saveGroup() async {
+  // Called when the "Save" button is tapped
+  void _saveGroup() async {
     if (friends.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select at least one friend')),
@@ -83,26 +89,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating group: $e')),
       );
-    }
-  }
-
-  // Called when the "Add friends" icon is tapped
-  void _addFriend() async {
-    final List<AppUser>? selectedUsers = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SearchPage(existingFriends: friends),
-      ),
-    );
-
-    if (selectedUsers != null && selectedUsers.isNotEmpty) {
-      setState(() {
-        for (var user in selectedUsers) {
-          if (!friends.any((friend) => friend.id == user.id)) {
-            friends.add(user);
-          }
-        }
-      });
     }
   }
 
