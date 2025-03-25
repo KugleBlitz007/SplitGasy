@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:splitgasy/services/balance_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class NewBillPage extends StatefulWidget {
   final String groupId;
@@ -23,10 +24,10 @@ class _NewBillPageState extends State<NewBillPage> {
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   String? _selectedPayer;
-  String? _selectedSplitMethod;
+  String? _selectedSplitMethod = 'Equal';
   bool _isSubmitting = false;
-  final double _amount = 0.0;
-  List<Map<String, dynamic>> _participants = [];
+  Map<String, TextEditingController> _shareControllers = {};
+  Map<String, TextEditingController> _percentageControllers = {};
 
   // Split methods
   final List<String> _splitMethods = [
@@ -38,15 +39,14 @@ class _NewBillPageState extends State<NewBillPage> {
   @override
   void initState() {
     super.initState();
-    _initializeParticipants();
+    _initializeControllers();
   }
 
-  void _initializeParticipants() {
-    _participants = widget.groupMembers.map((member) => {
-      'id': member['id'],
-      'name': member['name'],
-      'share': 0.0,
-    }).toList();
+  void _initializeControllers() {
+    for (var member in widget.groupMembers) {
+      _shareControllers[member['id']] = TextEditingController();
+      _percentageControllers[member['id']] = TextEditingController(text: '0');
+    }
   }
 
   @override
@@ -54,14 +54,68 @@ class _NewBillPageState extends State<NewBillPage> {
     _billNameController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
+    _shareControllers.values.forEach((controller) => controller.dispose());
+    _percentageControllers.values.forEach((controller) => controller.dispose());
     super.dispose();
   }
 
+  void _updateShares() {
+    if (_amountController.text.isEmpty) return;
+    
+    final totalAmount = double.tryParse(_amountController.text) ?? 0;
+    
+    switch (_selectedSplitMethod) {
+      case 'Equal':
+        final equalShare = (totalAmount / widget.groupMembers.length).toStringAsFixed(2);
+        for (var member in widget.groupMembers) {
+          _shareControllers[member['id']]?.text = equalShare;
+        }
+        break;
+        
+      case 'Proportional':
+        double totalPercentage = 0;
+        for (var controller in _percentageControllers.values) {
+          totalPercentage += double.tryParse(controller.text) ?? 0;
+        }
+        
+        if (totalPercentage > 0) {
+          for (var member in widget.groupMembers) {
+            final percentage = double.tryParse(_percentageControllers[member['id']]?.text ?? '0') ?? 0;
+            final share = (totalAmount * percentage / 100).toStringAsFixed(2);
+            _shareControllers[member['id']]?.text = share;
+          }
+        }
+        break;
+        
+      case 'Custom':
+        // Custom shares are managed directly through share controllers
+        break;
+    }
+  }
+
   Future<void> _submitBill() async {
-    if (!_formKey.currentState!.validate() || _selectedPayer == null || _selectedSplitMethod == null) {
+    if (!_formKey.currentState!.validate() || _selectedPayer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all required fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validate total shares equals total amount
+    final totalAmount = double.parse(_amountController.text);
+    double totalShares = 0;
+    
+    for (var controller in _shareControllers.values) {
+      totalShares += double.tryParse(controller.text) ?? 0;
+    }
+
+    if ((totalShares - totalAmount).abs() > 0.01) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Total shares must equal the bill amount'),
           backgroundColor: Colors.red,
         ),
       );
@@ -76,22 +130,22 @@ class _NewBillPageState extends State<NewBillPage> {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
-      final amount = double.parse(_amountController.text);
-      final equalShare = amount / widget.groupMembers.length;
+      // Create participants list with shares
+      final participants = widget.groupMembers.map((member) => {
+        ...member,
+        'share': double.parse(_shareControllers[member['id']]!.text),
+        'paid': member['id'] == _selectedPayer,
+      }).toList();
 
       // Create the bill document
       final billData = {
         'name': _billNameController.text.trim(),
         'groupId': widget.groupId,
         'paidById': _selectedPayer,
-        'amount': amount,
+        'amount': totalAmount,
         'date': Timestamp.now(),
         'splitMethod': _selectedSplitMethod?.toLowerCase() ?? 'equal',
-        'participants': widget.groupMembers.map((member) => {
-          ...member,
-          'share': equalShare,
-          'paid': member['id'] == _selectedPayer,
-        }).toList(),
+        'participants': participants,
         'createdBy': currentUser.uid,
         'createdAt': Timestamp.now(),
       };
@@ -108,49 +162,11 @@ class _NewBillPageState extends State<NewBillPage> {
         widget.groupId,
         billRef.id,
         _selectedPayer!,
-        (billData['participants'] as List).cast<Map<String, dynamic>>(),
+        participants,
       );
 
-      // Get the group name for the activity notification
-      final groupDoc = await FirebaseFirestore.instance
-          .collection('groups')
-          .doc(widget.groupId)
-          .get();
-      final groupName = groupDoc.data()?['name'] ?? 'Unknown Group';
-
-      // Get the creator's name
-      final creatorDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .get();
-      final creatorName = creatorDoc.data()?['name'] ?? 'Unknown User';
-
-      // Create activity notifications for all participants
-      final batch = FirebaseFirestore.instance.batch();
-      for (var participant in widget.groupMembers) {
-        // Create notification for everyone, including the creator
-        final activityRef = FirebaseFirestore.instance
-            .collection('users')
-            .doc(participant['id'])
-            .collection('activity')
-            .doc();
-
-        batch.set(activityRef, {
-          'type': 'expense_update',
-          'fromUserId': currentUser.uid,
-          'fromUserName': creatorName,
-          'groupId': widget.groupId,
-          'groupName': groupName,
-          'amount': amount,
-          'expenseName': _billNameController.text.trim(),
-          'timestamp': FieldValue.serverTimestamp(),
-          'isCreator': participant['id'] == currentUser.uid,  // Add flag to identify if this is the creator's notification
-        });
-      }
-      await batch.commit();
-
       if (mounted) {
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -178,285 +194,410 @@ class _NewBillPageState extends State<NewBillPage> {
         color: const Color(0xFF043E50),
         child: SafeArea(
           bottom: false,
-          child: Column(
-            children: [
-              // Top Section (Styled like Home Page)
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF043E50),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Bill Name Input
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _billNameController,
-                            autofocus: true,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Bill Name...',
-                              hintStyle: TextStyle(
-                                color: Colors.grey.shade400,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // Top Section
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF043E50),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Bill Name and Close Button
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _billNameController,
+                              autofocus: true,
+                              style: const TextStyle(
+                                color: Colors.white,
                                 fontSize: 24,
                                 fontWeight: FontWeight.w500,
                               ),
-                              filled: true,
-                              fillColor: Colors.transparent,
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                              errorStyle: const TextStyle(
-                                color: Color(0xFFFFC2C2),
-                                fontSize: 14,
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Please enter a bill name';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Who Paid Section
-                    const Text(
-                      'Paid by',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black26,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedPayer,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        dropdownColor: Colors.grey.shade900,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                        hint: Text(
-                          'Select payer',
-                          style: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        items: widget.groupMembers.map((member) {
-                          return DropdownMenuItem(
-                            value: member['id'] as String,
-                            child: Text(member['name'] as String),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedPayer = value;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Split Method Section
-                    const Text(
-                      'Split...',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black26,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedSplitMethod,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        dropdownColor: Colors.grey.shade900,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                        hint: Text(
-                          'Select split method',
-                          style: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        items: _splitMethods.map((method) {
-                          return DropdownMenuItem(
-                            value: method,
-                            child: Text(method),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedSplitMethod = value;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Amount Field
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Amount',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              const Text(
-                                '\$',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
+                              decoration: InputDecoration(
+                                hintText: 'Bill Name...',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.w500,
                                 ),
+                                border: InputBorder.none,
                               ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _amountController,
-                                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                  textAlign: TextAlign.right,
-                                  style: const TextStyle(
+                              validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // Amount Field
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Amount',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                const Text(
+                                  '\$',
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 40,
                                     fontWeight: FontWeight.w500,
                                   ),
-                                  decoration: InputDecoration(
-                                    border: const UnderlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.white,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    enabledBorder: const UnderlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.white,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    focusedBorder: const UnderlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.white,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    contentPadding: EdgeInsets.zero,
-                                    isDense: true,
-                                    hintText: '0',
-                                    hintStyle: TextStyle(
-                                      color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _amountController,
+                                    keyboardType: TextInputType.number,
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(
+                                      color: Colors.white,
                                       fontSize: 40,
                                       fontWeight: FontWeight.w500,
                                     ),
+                                    decoration: InputDecoration(
+                                      hintText: '0.00',
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey.shade400,
+                                        fontSize: 40,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      border: const UnderlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.white38),
+                                      ),
+                                      enabledBorder: const UnderlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.white38),
+                                      ),
+                                      focusedBorder: const UnderlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.white),
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value?.isEmpty ?? true) return 'Required';
+                                      if (double.tryParse(value!) == null) return 'Invalid amount';
+                                      return null;
+                                    },
+                                    onChanged: (value) => _updateShares(),
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter an amount';
-                                    }
-                                    if (double.tryParse(value) == null) {
-                                      return 'Please enter a valid number';
-                                    }
-                                    return null;
-                                  },
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Rest of the form fields
-              Expanded(
-                child: Container(
-                  color: Colors.grey[100],
-                  padding: const EdgeInsets.only(top: 30),
-                  child: SingleChildScrollView(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 20),
                         ],
                       ),
+
+                      const SizedBox(height: 30),
+
+                      // Paid By Section
+                      const Text(
+                        'Paid by',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedPayer,
+                          isExpanded: true,
+                          dropdownColor: const Color(0xFF043E50),
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          items: widget.groupMembers.map((member) {
+                            return DropdownMenuItem<String>(
+                              value: member['id'] as String,
+                              child: Text(member['name'] as String),
+                            );
+                          }).toList(),
+                          onChanged: (value) => setState(() => _selectedPayer = value),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Split Method Section
+                      const Text(
+                        'Split Method',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedSplitMethod,
+                          isExpanded: true,
+                          dropdownColor: const Color(0xFF043E50),
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          items: _splitMethods.map((String method) {
+                            return DropdownMenuItem<String>(
+                              value: method,
+                              child: Text(method),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedSplitMethod = value;
+                              _updateShares();
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Split Method Content
+                Expanded(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: _buildSplitMethodContent(),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _isSubmitting ? null : _submitBill,
         elevation: 0,
-        backgroundColor:  Colors.black26,
+        backgroundColor: const Color(0xFF043E50),
         child: _isSubmitting
             ? const CircularProgressIndicator(color: Colors.white)
             : const Icon(Icons.check, color: Colors.white),
       ),
     );
+  }
+
+  Widget _buildSplitMethodContent() {
+    if (_amountController.text.isEmpty) {
+      return const Center(
+        child: Text(
+          'Enter an amount first',
+          style: TextStyle(color: Color(0xFF043E50)),
+        ),
+      );
+    }
+
+    final totalAmount = double.tryParse(_amountController.text) ?? 0;
+
+    switch (_selectedSplitMethod) {
+      case 'Equal':
+        final equalShare = totalAmount / widget.groupMembers.length;
+        return Column(
+          children: widget.groupMembers.map((member) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    member['name'],
+                    style: const TextStyle(
+                      color: Color(0xFF043E50),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '\$${equalShare.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Color(0xFF043E50),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+
+      case 'Proportional':
+        return Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 20),
+              child: Text(
+                'Set percentage for each person',
+                style: TextStyle(
+                  color: Color(0xFF043E50),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ...widget.groupMembers.map((member) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        member['name'],
+                        style: const TextStyle(
+                          color: Color(0xFF043E50),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 80,
+                      child: TextField(
+                        controller: _percentageControllers[member['id']],
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          color: Color(0xFF043E50),
+                          fontSize: 16,
+                        ),
+                        decoration: const InputDecoration(
+                          suffix: Text('%'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        onChanged: (value) => _updateShares(),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    SizedBox(
+                      width: 80,
+                      child: Text(
+                        '\$${_shareControllers[member['id']]?.text ?? '0.00'}',
+                        style: const TextStyle(
+                          color: Color(0xFF043E50),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        );
+
+      case 'Custom':
+        return Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 20),
+              child: Text(
+                'Enter custom amount for each person',
+                style: TextStyle(
+                  color: Color(0xFF043E50),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ...widget.groupMembers.map((member) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        member['name'],
+                        style: const TextStyle(
+                          color: Color(0xFF043E50),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 120,
+                      child: TextField(
+                        controller: _shareControllers[member['id']],
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          color: Color(0xFF043E50),
+                          fontSize: 16,
+                        ),
+                        decoration: const InputDecoration(
+                          prefixText: '\$',
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        );
+
+      default:
+        return const SizedBox();
+    }
   }
 }

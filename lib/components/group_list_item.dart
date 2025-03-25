@@ -121,11 +121,6 @@ class GroupListItem extends StatelessWidget {
         if (snapshot.hasData && currentUser != null) {
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
-            final status = data['status'] as String?;
-            
-            // Skip settled balances
-            if (status == 'settled') continue;
-            
             final amount = (data['amount'] as num).toDouble();
             final fromUserId = data['fromUserId'] as String;
             final toUserId = data['toUserId'] as String;
@@ -223,11 +218,28 @@ class GroupListItem extends StatelessWidget {
                         //delete group action
                         TextButton(
                           onPressed: () async {
-                            // Delete the group from Firestore.
-                            await FirebaseFirestore.instance
+                            // Delete all balances associated with the group
+                            final balancesSnapshot = await FirebaseFirestore.instance
+                                .collection('balances')
+                                .where('groupId', isEqualTo: groupId)
+                                .get();
+                            
+                            // Create a batch operation for efficient deletion
+                            final batch = FirebaseFirestore.instance.batch();
+                            
+                            // Add balance deletions to batch
+                            for (var doc in balancesSnapshot.docs) {
+                              batch.delete(doc.reference);
+                            }
+                            
+                            // Add group deletion to batch
+                            batch.delete(FirebaseFirestore.instance
                                 .collection('groups')
-                                .doc(groupId)
-                                .delete();
+                                .doc(groupId));
+                            
+                            // Execute all deletions in a single atomic operation
+                            await batch.commit();
+                            
                             Navigator.pop(context);
                           },
                           child: Text("Delete", style: GoogleFonts.poppins(color: Colors.red)),

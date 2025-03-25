@@ -63,20 +63,23 @@ class BalanceService {
       // Create a batch operation
       final batch = FirebaseFirestore.instance.batch();
 
-      // Mark all balances as settled instead of deleting them
+      // Delete the balances instead of marking them as settled
       for (var doc in balancesQuery.docs) {
-        batch.update(doc.reference, {
-          'status': 'settled',
-          'settledAt': FieldValue.serverTimestamp(),
-        });
+        batch.delete(doc.reference);
       }
 
       for (var doc in reverseBalancesQuery.docs) {
-        batch.update(doc.reference, {
-          'status': 'settled',
-          'settledAt': FieldValue.serverTimestamp(),
-        });
+        batch.delete(doc.reference);
       }
+
+      // Create a settlement record
+      final settlementRef = FirebaseFirestore.instance.collection('settlements').doc();
+      batch.set(settlementRef, {
+        'groupId': groupId,
+        'fromUserId': fromUserId,
+        'toUserId': toUserId,
+        'settledAt': FieldValue.serverTimestamp(),
+      });
 
       // Commit the batch
       await batch.commit();

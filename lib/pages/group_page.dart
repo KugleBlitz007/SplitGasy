@@ -466,10 +466,6 @@ class GroupPage extends StatelessWidget {
                           final fromUserId = data['fromUserId'] as String;
                           final toUserId = data['toUserId'] as String;
                           final amount = (data['amount'] as num).toDouble();
-                          final status = data['status'] as String?;
-
-                          // Skip settled balances
-                          if (status == 'settled') continue;
 
                           if (fromUserId == currentUser.uid) {
                             // User owes money
