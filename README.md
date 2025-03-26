@@ -1,11 +1,11 @@
-# SplitGasy
+# Splizzy
 
 Johann Rajosefa 300300054
 Dera Ramiliarijaona 
 Matthieu Ramanitrera
 
  # Project Overview
-SplitGasy is a user-friendly mobile app designed to simplify the process of splitting expenses among a group of people. The app allows users to scan a physical bill, recognize items and their prices, allocate items to specific individuals, and calculate the total amount each person owes. 
+Splizzy is a user-friendly mobile app designed to simplify the process of splitting expenses among a group of people. The app allows users to scan a physical bill, recognize items and their prices, allocate items to specific individuals, and calculate the total amount each person owes. 
 
 # Technologies Used
 - Frontend: Flutter (for cross-platform mobile development)
