@@ -113,7 +113,11 @@ class _NewBillPageState extends State<NewBillPage> {
         break;
         
       case 'Custom':
-        // Custom shares are managed directly through share controllers
+        // Update share controllers based on custom amount controllers
+        for (var member in widget.groupMembers) {
+          final customAmount = double.tryParse(_customAmountControllers[member['id']]?.text ?? '0') ?? 0;
+          _shareControllers[member['id']]?.text = customAmount.toStringAsFixed(2);
+        }
         break;
     }
   }

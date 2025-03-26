@@ -88,7 +88,8 @@ class _BillListItemState extends State<BillListItem> {
                 ),
                 Row(
                   children: [
-                    if (widget.splitMethod.toLowerCase() == 'proportional') ...[
+                    if (widget.splitMethod.toLowerCase() == 'proportional' || 
+                       widget.splitMethod.toLowerCase() == 'custom') ...[
                       Text(
                         '$percentage%',
                         style: GoogleFonts.poppins(
