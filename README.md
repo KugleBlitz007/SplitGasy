@@ -1,3 +1,6 @@
+![Splizzy Banner](lib/assets/icon/Banner_readME.png)
+
+
 # Splizzy - Bill Splitting App
 
 ## Team Members
