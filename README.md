@@ -31,7 +31,6 @@ Splizzy is a user-friendly mobile application designed to simplify the process o
   - **Firestore**: Real-time database
   - **Firebase Authentication**: User authentication
   - **Google Sign-In**: Social authentication
-- **OCR Integration**: For bill scanning and text extraction
 
 ### Development Tools
 - Flutter SDK (^3.7.0)
@@ -92,6 +91,7 @@ lib/
    📤 Expense export (PDF/CSV)
 
    🔔 Push notifications for expense reminders
+   
 ## Contributing
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
